@@ -18,11 +18,15 @@ const ROLE_EMAIL: Record<string, string> = {
   root: "root@almohandes.edu",
 };
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ role?: string }> }) {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ role?: string; expired?: string; next?: string }>;
+}) {
   const user = await getSessionUser();
   if (user) redirect(HOME_FOR_ROLE[user.role]);
   const { locale } = await getPrefs();
-  const { role } = await searchParams;
+  const { role, expired, next } = await searchParams;
 
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1.05fr_1fr]">
@@ -86,8 +90,31 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           </Link>
           <PrefToggles />
         </div>
-        <div className="flex flex-1 items-center justify-center px-5 pb-10">
+        <div className="flex flex-1 flex-col items-center justify-center px-5 pb-10">
+          {(expired || next) && (
+            <div className="mb-3 w-full max-w-[400px] rounded-xl border border-warn-500/35 bg-warn-500/[0.07] px-3.5 py-2.5 text-[11.5px] leading-relaxed text-fg-soft">
+              <span className="font-semibold text-warn-500">
+                {expired ? tx(locale, "انتهت جلسة التحقق", "Verification session ended") : tx(locale, "سجّل الدخول للمتابعة", "Sign in to continue")}
+              </span>
+              <span className="mt-0.5 block text-fg-muted">
+                {expired
+                  ? tx(locale, "الرمز صالح 5 دقائق فقط. أدخل بياناتك للحصول على رمز جديد — لا شيء مفقود.", "Codes are valid for 5 minutes. Enter your credentials for a fresh code — nothing is lost.")
+                  : tx(locale, "تحتاج جلسة صالحة لفتح هذه الصفحة.", "You need a valid session to open that page.")}
+              </span>
+            </div>
+          )}
           <LoginForm initialEmail={role ? ROLE_EMAIL[role] : undefined} />
+          {/* No-JS / failed-hydration fallback: a plain HTML form posting to a
+              route handler, so sign-in never depends on the client bundle. */}
+          <noscript>
+            <form action="/api/auth/sign-in" method="post" className="mt-4 w-full max-w-[400px] space-y-2 rounded-xl border border-line bg-surface p-4">
+              <p className="text-[11.5px] font-medium text-fg-soft">{tx(locale, "الدخول بدون جافاسكربت", "Sign in without JavaScript")}</p>
+              <input name="email" type="email" required placeholder={tx(locale, "البريد المؤسسي", "Institutional email")} className="h-10 w-full rounded-lg border border-line-strong bg-bg-elevated px-3 text-[12px] text-fg" />
+              <input name="password" type="password" required placeholder={tx(locale, "كلمة المرور", "Password")} className="h-10 w-full rounded-lg border border-line-strong bg-bg-elevated px-3 text-[12px] text-fg" />
+              <button type="submit" className="h-10 w-full rounded-lg bg-brand-500 text-[12px] font-semibold text-white">{tx(locale, "متابعة", "Continue")}</button>
+              <span className="block text-[10px] leading-relaxed text-fg-muted">{tx(locale, "ثم أدخل رمز التحقق في الصفحة التالية.", "Then enter the verification code on the next page.")}</span>
+            </form>
+          </noscript>
         </div>
         <div className="border-t border-line px-5 py-3 text-center text-[10.5px] text-fg-muted">
           © 2026 AL MOHANDES · {tx(locale, "نموذج أولي وظيفي — بيانات تجريبية", "Functional prototype — demo data")}

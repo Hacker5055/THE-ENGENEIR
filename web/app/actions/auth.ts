@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { completeSignIn, HOME_FOR_ROLE, resendChallenge, signOut, startSignIn } from "@/lib/server/auth";
+import { completeSignIn, cookieSecure, peekChallenge, resendChallenge, signOut, startSignIn } from "@/lib/server/auth";
 
 export interface LoginState {
   error?: string;
@@ -25,20 +25,30 @@ export async function loginAction(_prev: LoginState, formData: FormData): Promis
     return { error: "بيانات الدخول غير صحيحة. تحقق من البريد وكلمة المرور.", email };
   }
 
-  (await cookies()).set("am_pending", result.challengeId, {
+  const jar = await cookies();
+  jar.set("am_pending", result.challengeId, {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
     maxAge: 300,
-    secure: process.env.NODE_ENV === "production",
+    secure: await cookieSecure(),
   });
-  redirect("/verify");
+  // The challenge id also travels in the URL: some embedded/preview browsers
+  // drop short-lived cookies between two navigations, and losing the id turned
+  // a valid code into a dead end.
+  redirect(`/verify?c=${encodeURIComponent(result.challengeId)}`);
 }
 
 export async function verifyAction(_prev: LoginState, formData: FormData): Promise<LoginState> {
-  const challengeId = (await cookies()).get("am_pending")?.value;
+  const fromForm = String(formData.get("challenge") ?? "").trim();
+  const challengeId = fromForm || (await cookies()).get("am_pending")?.value;
   const code = String(formData.get("code") ?? "");
-  if (!challengeId) return { error: "انتهت صلاحية جلسة التحقق. يرجى تسجيل الدخول مرة أخرى." };
+  if (!challengeId) {
+    return { error: "انتهت جلسة التحقق أو أُغلقت. سجّل الدخول من جديد — لن تفقد شيئاً." };
+  }
+  if (!peekChallenge(challengeId)) {
+    return { error: "انتهت صلاحية هذا الرمز (5 دقائق). سجّل الدخول من جديد للحصول على رمز آخر." };
+  }
   if (code.replace(/\D/g, "").length !== 6) return { error: "أدخل الرمز المكوّن من 6 أرقام." };
 
   const result = await completeSignIn(challengeId, code);
@@ -49,11 +59,15 @@ export async function verifyAction(_prev: LoginState, formData: FormData): Promi
   }
 
   (await cookies()).delete("am_pending");
-  redirect(HOME_FOR_ROLE[result.role]);
+  // Land on /welcome first: it verifies the session cookie actually reached the
+  // browser, and explains what to do when it did not (blocked/third-party).
+  redirect("/welcome");
 }
 
-export async function resendOtpAction(): Promise<{ ok: boolean; demoCode?: string; message: string }> {
-  const challengeId = (await cookies()).get("am_pending")?.value;
+export async function resendOtpAction(
+  challengeFromPage?: string,
+): Promise<{ ok: boolean; demoCode?: string; message: string }> {
+  const challengeId = challengeFromPage?.trim() || (await cookies()).get("am_pending")?.value;
   if (!challengeId) return { ok: false, message: "انتهت الجلسة، يرجى تسجيل الدخول مجدداً." };
   const res = await resendChallenge(challengeId);
   if (!res.ok) {

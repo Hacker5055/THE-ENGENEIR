@@ -68,7 +68,7 @@ export function OtpForm({
 
   const resend = async () => {
     setResending(true);
-    const res = await resendOtpAction();
+    const res = await resendOtpAction(challengeId);
     setResending(false);
     if (res.ok && res.demoCode) {
       setCode(res.demoCode);

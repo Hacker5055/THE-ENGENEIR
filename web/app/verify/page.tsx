@@ -9,10 +9,18 @@ import { getPrefs } from "@/lib/prefs";
 
 export const metadata = { title: "التحقق الثنائي" };
 
-export default async function VerifyPage() {
-  const chunk = (await cookies()).get("am_pending")?.value;
-  const challenge = peekChallenge(chunk);
-  if (!challenge) redirect("/login");
+export default async function VerifyPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ c?: string; expired?: string }>;
+}) {
+  const sp = await searchParams;
+  const cookieId = (await cookies()).get("am_pending")?.value;
+  // Prefer the id carried in the URL: it is what survives environments that
+  // drop short-lived cookies between the two sign-in navigations.
+  const challengeId = sp.c?.trim() || cookieId;
+  const challenge = peekChallenge(challengeId);
+  if (!challenge) redirect("/login?expired=1");
   const { locale } = await getPrefs();
 
   return (
@@ -33,12 +41,23 @@ export default async function VerifyPage() {
       <main className="relative flex flex-1 items-center justify-center px-5 pb-16">
         <div className="w-full max-w-[400px] rounded-2xl border border-line bg-surface/70 p-6 shadow-lg backdrop-blur-xl">
           <OtpForm
-            challengeId={chunk!}
+            challengeId={challengeId!}
             demoCode={challenge.demoCode}
             email={challenge.email}
             name={challenge.name}
             expiresInMs={challenge.expiresInMs}
           />
+
+          {/* Fallback that never depends on hydration. */}
+          <noscript>
+            <form action="/api/auth/verify" method="post" className="mt-4 space-y-2 rounded-xl border border-line bg-surface p-3.5">
+              <p className="text-[11px] font-medium text-fg-soft">أدخل الرمز المكوّن من 6 أرقام</p>
+              <input type="hidden" name="challenge" value={challengeId!} />
+              <input name="code" inputMode="numeric" maxLength={6} required placeholder="000000" dir="ltr" className="h-11 w-full rounded-lg border border-line-strong bg-bg-elevated text-center font-mono text-lg tracking-[0.3em] text-fg" />
+              <button type="submit" className="h-10 w-full rounded-lg bg-brand-500 text-[12px] font-semibold text-white">تأكيد الدخول</button>
+              <p className="text-[10px] text-fg-muted">الرمز: <code className="font-mono">{challenge.demoCode}</code></p>
+            </form>
+          </noscript>
         </div>
       </main>
     </div>

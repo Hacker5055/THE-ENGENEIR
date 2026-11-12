@@ -8,7 +8,7 @@
    ========================================================================== */
 
 import "server-only";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
@@ -19,6 +19,22 @@ import { DEMO_CREDENTIALS } from "./seed";
 import { db } from "./store";
 
 const COOKIE = "am_session";
+
+/**
+ * A `Secure` cookie is silently dropped when the app is reached over plain HTTP
+ * (common behind preview proxies and in embedded iframes). Trust the forwarded
+ * protocol instead of assuming production implies TLS.
+ */
+export async function cookieSecure(): Promise<boolean> {
+  try {
+    const h = await headers();
+    const proto = h.get("x-forwarded-proto")?.split(",")[0]?.trim().toLowerCase();
+    if (proto) return proto === "https";
+    return process.env.NODE_ENV === "production";
+  } catch {
+    return process.env.NODE_ENV === "production";
+  }
+}
 const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
 
 /* --------------------------- password hashing --------------------------- */
@@ -195,7 +211,7 @@ export async function resendChallenge(challengeId: string): Promise<{ ok: boolea
 export async function completeSignIn(
   challengeId: string,
   code: string,
-): Promise<{ ok: true; role: Role } | { ok: false; error: "EXPIRED" | "INVALID_CODE" | "LOCKED" }> {
+): Promise<{ ok: true; role: Role; token: string } | { ok: false; error: "EXPIRED" | "INVALID_CODE" | "LOCKED" }> {
   const ch = pending.get(challengeId);
   if (!ch) return { ok: false, error: "EXPIRED" };
   if (ch.expiresAt < Date.now()) {
@@ -232,12 +248,12 @@ export async function completeSignIn(
   (await cookies()).set(COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: await cookieSecure(),
     path: "/",
     maxAge: SESSION_TTL_MS / 1000,
   });
   pushAuthAudit(user.id, user.nameAr, user.role, "auth.sign_in", "تسجيل دخول ناجح بعد التحقق الثنائي", user.email, "INFO");
-  return { ok: true, role: user.role };
+  return { ok: true, role: user.role, token };
 }
 
 function pushAuthAudit(userId: string, name: string, role: Role, action: string, actionAr: string, target: string, severity: "INFO" | "WARNING" | "CRITICAL") {
@@ -265,7 +281,7 @@ export const HOME_FOR_ROLE: Record<Role, string> = {
 
 export async function requireUser(): Promise<SessionUser> {
   const user = await getSessionUser();
-  if (!user) redirect("/login");
+  if (!user) redirect("/login?next=1");
   return user;
 }
 
@@ -341,6 +357,12 @@ export async function devCreateSession(email: string) {
   const now = Date.now();
   sessions.set(token, { userId: user.id, role: user.role, issuedAt: now, expiresAt: now + SESSION_TTL_MS, ip: "127.0.0.1", agent: "dev" });
   persistState();
-  (await cookies()).set(COOKIE, token, { httpOnly: true, sameSite: "lax", path: "/", maxAge: SESSION_TTL_MS / 1000 });
+  (await cookies()).set(COOKIE, token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: await cookieSecure(),
+    path: "/",
+    maxAge: SESSION_TTL_MS / 1000,
+  });
   return { role: user.role, id: user.id };
 }
