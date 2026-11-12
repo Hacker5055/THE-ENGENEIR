@@ -1,0 +1,438 @@
+openapi: 3.1.0
+info:
+  title: Al Mohandes Platform API
+  version: 1.0.0
+  summary: Multi-tenant academic operations and secure examination engine.
+  description: |
+    REST surface consumed by the student mobile client and institutional
+    integrations. Session authentication uses an HTTP-only cookie (`am_session`)
+    established by the two-step sign-in flow.
+
+    Design rules that are enforced server-side, not by the client:
+
+    * the examination deadline (`endsAt`) is the **only** source of time truth;
+    * answer writes carry a `revision` and stale writes are rejected with 409;
+    * integrity events are append-only and severity-classified before any human
+      decision;
+    * no endpoint voids an attempt automatically.
+
+    Arabic-first: every human-readable message is available in Arabic and English.
+  contact:
+    name: Al Mohandes Platform Team
+    email: platform@almohandes.edu
+servers:
+  - url: https://api.almohandes.edu/v1
+    description: Production
+  - url: http://localhost:3000/api/v1
+    description: Local development
+tags:
+  - name: Auth
+  - name: Attendance
+  - name: Examination
+  - name: Reports
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: am_session
+  parameters:
+    AttemptId:
+      name: attemptId
+      in: path
+      required: true
+      schema: { type: string }
+    SessionId:
+      name: sessionId
+      in: path
+      required: true
+      schema: { type: string }
+    ExaminationId:
+      name: examinationId
+      in: path
+      required: true
+      schema: { type: string }
+  headers:
+    NoStore:
+      description: Live data must never be cached.
+      schema: { type: string, example: "no-store, no-cache, must-revalidate" }
+  responses:
+    Unauthenticated:
+      description: No valid session.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: UNAUTHENTICATED, message: "الجلسة غير صالحة — سجّل الدخول مجدداً." }
+    Forbidden:
+      description: The authenticated role lacks the required permission.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: FORBIDDEN, message: "لا تملك صلاحية تنفيذ هذا الإجراء." }
+    NotFound:
+      description: Resource not found or outside the caller's institution scope.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: NOT_FOUND, message: "العنصر غير موجود." }
+    Conflict:
+      description: Business-state conflict (expired token, stale revision, locked attempt).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+  schemas:
+    Error:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          description: Stable machine code.
+          examples: [UNAUTHENTICATED, FORBIDDEN, TOKEN_EXPIRED, OUTSIDE_GEOFENCE, EXAM_LOCKED, TIME_UP, REVISION_CONFLICT, RATE_LIMITED]
+        message:
+          type: string
+          description: Localised, actionable message.
+        details:
+          type: object
+          additionalProperties: true
+    AttendanceSession:
+      type: object
+      required: [id, courseId, status, start, end, geo]
+      properties:
+        id: { type: string }
+        courseId: { type: string }
+        sectionId: { type: string }
+        teacherId: { type: string }
+        date: { type: string, format: date }
+        start: { type: string, pattern: '^([01]\d|2[0-3]):[0-5]\d$' }
+        end: { type: string, pattern: '^([01]\d|2[0-3]):[0-5]\d$' }
+        room: { type: string }
+        status: { type: string, enum: [OPEN, CLOSED] }
+        expectedCount: { type: integer, minimum: 0 }
+        presentCount: { type: integer, minimum: 0 }
+        lateCount: { type: integer, minimum: 0 }
+        geo:
+          type: object
+          required: [lat, lng, radiusM, label]
+          properties:
+            lat: { type: number, minimum: -90, maximum: 90 }
+            lng: { type: number, minimum: -180, maximum: 180 }
+            radiusM: { type: integer, minimum: 25, maximum: 500 }
+            label: { type: string }
+    CheckInRequest:
+      type: object
+      required: [sessionId, token, deviceId]
+      properties:
+        sessionId: { type: string }
+        token:
+          type: string
+          description: Value read from the rotating QR. Valid for 20 seconds only.
+        lat: { type: number }
+        lng: { type: number }
+        accuracy: { type: number, description: Metres of GPS accuracy. }
+        deviceId: { type: string }
+        manualCode:
+          type: string
+          description: Six-character fallback code, used when the camera is unavailable.
+    CheckInResponse:
+      type: object
+      required: [ok, status, distanceM]
+      properties:
+        ok: { type: boolean }
+        status: { type: string, enum: [PRESENT, LATE, ABSENT, EXCUSED] }
+        distanceM: { type: number, description: Distance from the geofence centre. }
+        message: { type: string }
+        serverNow: { type: integer, description: Unix epoch milliseconds. }
+    AttemptState:
+      type: object
+      required: [attemptId, status, serverNow, remainingMs, maxViolations, totalQuestions]
+      properties:
+        attemptId: { type: string }
+        examinationId: { type: string }
+        status:
+          type: string
+          enum: [NOT_STARTED, IN_PROGRESS, SUBMITTED, GRADING, GRADED, FLAGGED, LOCKED, CANCELLED, EXPIRED]
+        serverNow: { type: integer }
+        endsAt: { type: [integer, "null"] }
+        remainingMs: { type: integer, minimum: 0 }
+        violations: { type: integer, minimum: 0 }
+        maxViolations: { type: integer, minimum: 1 }
+        savedCount: { type: integer, minimum: 0 }
+        totalQuestions: { type: integer, minimum: 1 }
+        policy: { type: string, enum: [STANDARD, STRICT, LOCKDOWN] }
+    AnswerRequest:
+      type: object
+      required: [questionId, revision]
+      properties:
+        questionId: { type: string }
+        value:
+          type: array
+          description: Selected option ids (MCQ/TF) or ordered matches.
+          items: { type: string }
+        textValue:
+          type: string
+          description: Essay / short-answer body.
+        revision:
+          type: integer
+          minimum: 1
+          description: Client's expected next revision; lower values are rejected.
+        flagged:
+          type: boolean
+          description: Student-side "review later" marker.
+    AnswerResponse:
+      type: object
+      required: [ok, savedAt, revision]
+      properties:
+        ok: { type: boolean }
+        savedAt: { type: integer }
+        revision: { type: integer }
+    EventRequest:
+      type: object
+      required: [type]
+      properties:
+        type:
+          type: string
+          enum: [APP_BACKGROUNDED, FOCUS_LOST, SPLIT_SCREEN, SCREENSHOT_ATTEMPT, UNAUTHORIZED_APP, DEVICE_MISMATCH, NETWORK_LOST, NETWORK_RESTORED]
+        clientTime: { type: integer, description: Client epoch ms; skew is recorded, never trusted. }
+        detail: { type: string, maxLength: 300 }
+      description: |
+        The server classifies severity itself. Repeated violations can freeze the
+        attempt; the freeze only blocks submission and routes the case to a human
+        supervisor — it never voids the examination.
+paths:
+  /attendance/sessions/{sessionId}/token:
+    get:
+      tags: [Attendance]
+      summary: Read the current rotating check-in token
+      description: |
+        Returns the token that is currently rendered on the teacher's screen.
+        The server rotates it on expiry (20 s window); clients must never mint one.
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      responses:
+        '200':
+          description: Current token and its expiry.
+          headers:
+            Cache-Control: { $ref: '#/components/headers/NoStore' }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sessionId, token, expiresAt, serverNow]
+                properties:
+                  sessionId: { type: string }
+                  token: { type: string }
+                  expiresAt: { type: integer }
+                  serverNow: { type: integer }
+                  expectedCount: { type: integer }
+                  geo: { $ref: '#/components/schemas/AttendanceSession/properties/geo' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: The session is already closed.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: SESSION_CLOSED, message: "انتهت الجلسة — لا يمكن تسجيل الحضور." }
+  /attendance/sessions/{sessionId}/qr:
+    get:
+      tags: [Attendance]
+      summary: Server-rendered SVG of the current token
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+        - name: theme
+          in: query
+          schema: { type: string, enum: [dark, light], default: dark }
+      responses:
+        '200':
+          description: An image/svg+xml frame containing the signed payload.
+          headers:
+            Cache-Control: { $ref: '#/components/headers/NoStore' }
+          content:
+            image/svg+xml:
+              schema: { type: string }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /attendance/check-in:
+    post:
+      tags: [Attendance]
+      summary: Register attendance for the authenticated student
+      security: [{ sessionCookie: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CheckInRequest' }
+      responses:
+        '200':
+          description: Attendance recorded.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CheckInResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '409':
+          description: |
+            Token expired, geofence failure, unknown device, or duplicate check-in.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                expired: { value: { error: TOKEN_EXPIRED, message: "انتهت صلاحية الرمز — امسح الرمز الحالي على شاشة المعلم." } }
+                geofence: { value: { error: OUTSIDE_GEOFENCE, message: "أنت خارج النطاق المسموح (185 م)." } }
+                device: { value: { error: DEVICE_NOT_REGISTERED, message: "سجّل جهازك أولاً من صفحة الأمان." } }
+        '429': { $ref: '#/components/responses/Conflict' }
+  /exam/examinations/{examinationId}/start:
+    post:
+      tags: [Examination]
+      summary: Start or resume an attempt
+      description: Idempotent for an existing live attempt — returns the same attemptId.
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/ExaminationId'
+      responses:
+        '200':
+          description: Attempt created or resumed.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, attemptId]
+                properties:
+                  ok: { type: boolean }
+                  attemptId: { type: string }
+                  resumed: { type: boolean }
+        '409':
+          description: Examination not live, attempts exhausted, or attempt locked.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                notLive: { value: { error: NOT_LIVE, message: "الاختبار غير متاح للبدء الآن." } }
+                locked: { value: { error: EXAM_LOCKED, message: "المحاولة مجمّدة بانتظار قرار المراقب." } }
+  /exam/attempts/{attemptId}/state:
+    get:
+      tags: [Examination]
+      summary: Authoritative attempt state and timer
+      description: |
+        Clients render the countdown from `endsAt`/`remainingMs` and never decrement
+        their own clock as truth.
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/AttemptId'
+      responses:
+        '200':
+          description: Current state.
+          headers:
+            Cache-Control: { $ref: '#/components/headers/NoStore' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AttemptState' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /exam/attempts/{attemptId}/answer:
+    post:
+      tags: [Examination]
+      summary: Save one answer
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/AttemptId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AnswerRequest' }
+      responses:
+        '200':
+          description: Saved; the returned revision is the new authoritative one.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AnswerResponse' }
+        '409':
+          description: Stale revision, time up, or the attempt is frozen.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                revision: { value: { error: REVISION_CONFLICT, message: "نسخة أقدم من المحفوظة — أعد تحميل الحالة." } }
+                time: { value: { error: TIME_UP, message: "انتهى وقت الاختبار على الخادم." } }
+  /exam/attempts/{attemptId}/events:
+    post:
+      tags: [Examination]
+      summary: Report an integrity event
+      description: |
+        Severity is assigned by the server from the event type. Reaching the
+        examination's violation cap freezes the attempt, notifies the supervisor,
+        and writes an audit entry. The attempt is never voided automatically.
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/AttemptId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EventRequest' }
+      responses:
+        '200':
+          description: Event recorded and counters updated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  violations: { type: integer }
+                  maxViolations: { type: integer }
+                  status: { type: string }
+                  warning: { type: string, description: Shown to the student when applicable. }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /exam/attempts/{attemptId}/submit:
+    post:
+      tags: [Examination]
+      summary: Submit and auto-grade objective items
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/AttemptId'
+      responses:
+        '200':
+          description: Submitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, attemptId]
+                properties:
+                  ok: { type: boolean }
+                  attemptId: { type: string }
+                  already: { type: boolean }
+                  score: { type: number }
+                  pendingManual: { type: integer, description: Answers awaiting human grading. }
+        '409':
+          description: Submission blocked because the attempt is frozen.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: LOCKED, message: "لا يمكن التسليم أثناء تجميد المحاولة. تواصل مع المراقب." }
+  /reports/{kind}:
+    get:
+      tags: [Reports]
+      summary: Export a report as CSV (UTF-8 with BOM)
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - name: kind
+          in: path
+          required: true
+          schema: { type: string, enum: [students, grades, attendance, exams, audit] }
+      responses:
+        '200':
+          description: CSV attachment. Every export is written to the audit log.
+          headers:
+            Content-Disposition:
+              schema: { type: string, example: 'attachment; filename="al-mohandes-students-2026-11-10.csv"' }
+          content:
+            text/csv:
+              schema: { type: string }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }

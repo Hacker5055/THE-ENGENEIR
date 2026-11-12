@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="المهندس — AL MOHANDES">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2E6FE6"/><stop offset="0.55" stop-color="#1B4AA8"/><stop offset="1" stop-color="#0F2650"/>
+    </linearGradient>
+    <linearGradient id="glyphFill" x1="14" y1="10" x2="50" y2="54" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/><stop offset="0.62" stop-color="#EAF4FF"/><stop offset="1" stop-color="#A9D4FF"/>
+    </linearGradient>
+    <radialGradient id="sheen" cx="0.18" cy="-0.1" r="1.05">
+      <stop stop-color="#FFFFFF" stop-opacity="0.30"/><stop offset="0.7" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="url(#tile)"/>
+  <rect width="64" height="64" rx="16" fill="url(#sheen)"/>
+  
+  <g transform="translate(14.213 36.107) scale(0.0588 -0.0588)"><path d="M46 -60Q46 58 96 114.5Q146 171 251 171L468 171Q466 237 432.5 275Q399 313 348 313Q302 313 275.5 290.5Q249 268 235 230L141 270Q151 318 173 351Q195 384 223 404.5Q251 425 283 434.5Q315 444 346 444Q445 444 502 369Q559 294 559 155L559 40L251 40Q222 40 203 35Q184 30 172.5 18.5Q161 7 156 -12Q151 -31 151 -60L151 -304L46 -304Z" fill="url(#glyphFill)"/></g>
+  <path d="M12 55.6H52" stroke="#38A5FF" stroke-width="1.8" stroke-linecap="round" opacity="0.9"/>
+  <path d="M12 53.2v4.8M52 53.2v4.8" stroke="#38A5FF" stroke-width="1.6" stroke-linecap="round" opacity="0.55"/>
+</svg>
