@@ -430,7 +430,8 @@ CREATE INDEX idx_notifications_user_unread
       { t: "ul", items: [
         { ar: "Next.js 15 App Router — مكونات خادم للقراءة، وServer Actions للكتابة.", en: "Next.js 15 App Router — server components for reads, server actions for writes." },
         { ar: "PostgreSQL 16 + Prisma/‏SQL مباشر — معاملات صريحة حول كل تغيير مالي أو أكاديمي.", en: "PostgreSQL 16 with Prisma or raw SQL — explicit transactions around every academic or graded change." },
-        { ar: "Redis (اختياري) لجلسات OTP والمعدّلات — قابل للاستبدال بجدول مؤقت.", en: "Redis (optional) for OTP sessions and rate limits — replaceable with a transient table." },
+        { ar: "جلسات الخادم: في هذه النسخة تُحفظ في ملف حالة (`.data/auth-state.json` بصلاحية 0600) لتبقى بعد إعادة التشغيل، وفي الإنتاج Redis أو جدول `sessions`.", en: "Server sessions: mirrored to a 0600 state file (`.data/auth-state.json`) so a restart does not sign everyone out; Redis or a `sessions` table in production." },
+        { ar: "Redis (اختياري) لتحديات OTP والمعدّلات — قابل للاستبدال بجدول مؤقت.", en: "Redis (optional) for OTP challenges and rate limits — replaceable with a transient table." },
         { ar: "تخزين كائنات للمرفقات (S3 متوافق) مع روابط موقّعة قصيرة العمر.", en: "Object storage for attachments (S3-compatible) with short-lived signed URLs." },
         { ar: "طابور مهام للإشعارات والتصدير والتذكيرات — لا يُنفّذ داخل الطلب.", en: "A job queue for notifications, exports and reminders — never inline in the request." },
       ] },
@@ -577,6 +578,15 @@ Cookie: am_session=...
         { ar: "الوصول: الطالب يطلب نسخة من بياناته، وتُصدَّر خلال 30 يوماً.", en: "Access: a student may request their data, exported within 30 days." },
         { ar: "التصحيح: كل قرار خاطئ له مسار استئناف بشر مستقل.", en: "Rectification: every wrong decision has an independent human appeal path." },
         { ar: "الإخطار: سياسة المراقبة تُعرض قبل بدء الاختبار، وليست في صفحة شروط مدفونة.", en: "Notice: the monitoring policy is shown before starting, not buried in terms." },
+      ] },
+      { t: "h2", ar: "دورة حياة الجلسة", en: "Session lifecycle" },
+      { t: "table", headers: [{ ar: "المرحلة", en: "Stage" }, { ar: "السلوك", en: "Behaviour" }], rows: [
+        ["الدخول", "Sign-in", "بريد + كلمة مرور ← تحدي 6 أرقام (5 دقائق، 5 محاولات) ← كوكي am_session", "Email + password → 6-digit challenge (5 min, 5 attempts) → am_session cookie"],
+        ["المدة", "Lifetime", "8 ساعات صلاحية مطلقة، وليست متجددة تلقائياً بلا حد", "8-hour absolute lifetime, not renewed indefinitely"],
+        ["إعادة التشغيل", "Restart", "الجلسات والتحديات تُستعاد من ملف الحالة — لا خروج جماعي", "Sessions and challenges rehydrate from the state file — no mass sign-out"],
+        ["الخروج", "Sign-out", "حذف الجلسة من الخادم والملف والكوكي في نفس الطلب", "Session removed from server, file and cookie in the same request"],
+        ["الانتهاء", "Expiry", "انتهاء صلاحية الرمز يعرض لوحة صريحة مع إعادة إرسال فوري بدل رسالة خطأ ميتة", "An expired code shows an explicit panel with immediate resend instead of a dead-end error"],
+        ["الإلغاء", "Revocation", "إلغاء جهاز من الإدارة يُبطل جلساته المرتبطة به", "Revoking a device from admin invalidates its bound sessions"],
       ] },
       { t: "h2", ar: "الأمان التشغيلي", en: "Operations" },
       { t: "ul", items: [

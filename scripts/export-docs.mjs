@@ -11,13 +11,16 @@
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const require = createRequire(import.meta.url);
 const modulePath = process.argv[2] ?? "/tmp/am-docs/docs.js";
 const { DOCS } = require(modulePath);
 
-const OUT = join(process.cwd(), "docs");
+// Always write to <repo>/docs, regardless of where the script is invoked from.
+const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+const OUT = join(REPO_ROOT, "docs");
 mkdirSync(OUT, { recursive: true });
 
 const slugTitle = (slug) =>

@@ -67,6 +67,19 @@ _Privacy and student rights_
 - الإخطار: سياسة المراقبة تُعرض قبل بدء الاختبار، وليست في صفحة شروط مدفونة.
   <br>_Notice: the monitoring policy is shown before starting, not buried in terms._
 
+## دورة حياة الجلسة
+
+_Session lifecycle_
+
+| المرحلة / Stage | السلوك / Behaviour |
+| --- | --- |
+| الدخول | Sign-in | بريد + كلمة مرور ← تحدي 6 أرقام (5 دقائق، 5 محاولات) ← كوكي am_session | Email + password → 6-digit challenge (5 min, 5 attempts) → am_session cookie |
+| المدة | Lifetime | 8 ساعات صلاحية مطلقة، وليست متجددة تلقائياً بلا حد | 8-hour absolute lifetime, not renewed indefinitely |
+| إعادة التشغيل | Restart | الجلسات والتحديات تُستعاد من ملف الحالة — لا خروج جماعي | Sessions and challenges rehydrate from the state file — no mass sign-out |
+| الخروج | Sign-out | حذف الجلسة من الخادم والملف والكوكي في نفس الطلب | Session removed from server, file and cookie in the same request |
+| الانتهاء | Expiry | انتهاء صلاحية الرمز يعرض لوحة صريحة مع إعادة إرسال فوري بدل رسالة خطأ ميتة | An expired code shows an explicit panel with immediate resend instead of a dead-end error |
+| الإلغاء | Revocation | إلغاء جهاز من الإدارة يُبطل جلساته المرتبطة به | Revoking a device from admin invalidates its bound sessions |
+
 ## الأمان التشغيلي
 
 _Operations_

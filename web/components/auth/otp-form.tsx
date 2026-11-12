@@ -98,6 +98,19 @@ export function OtpForm({
       </p>
 
       {state.error && <Alert tone="danger" title={state.error} className="mt-4" icon="alert-circle" />}
+      {remaining <= 0 && (
+        <Alert
+          tone="warning"
+          title={l("انتهت صلاحية هذا الرمز", "This code has expired")}
+          className="mt-4"
+          icon="clock"
+        >
+          {l(
+            "أرسل رمزاً جديداً بالزر أدناه، أو ابدأ تسجيل الدخول من جديد. لم تُنشأ أي جلسة بعد، فلا شيء مفقود.",
+            "Send a new code with the button below, or start over. No session was created yet, so nothing is lost.",
+          )}
+        </Alert>
+      )}
 
       <form ref={formRef} action={action} className="mt-6">
         <input type="hidden" name="code" value={digits.join("")} />
@@ -136,11 +149,15 @@ export function OtpForm({
             {l("ينتهي بعد", "Expires in")} <span className="tnum font-medium text-fg-soft">{fmtCountdown(remaining)}</span>
           </span>
           <button type="button" onClick={resend} disabled={resending} className="font-medium text-accent-400 hover:underline disabled:opacity-50">
-            {resending ? l("جارٍ الإرسال…", "Sending…") : l("إعادة إرسال الرمز", "Resend code")}
+            {resending
+              ? l("جارٍ الإرسال…", "Sending…")
+              : remaining <= 0
+                ? l("أرسل رمزاً جديداً", "Send a new code")
+                : l("إعادة إرسال الرمز", "Resend code")}
           </button>
         </div>
 
-        <SubmitBtn />
+        <SubmitBtn disabled={remaining <= 0} />
 
         <div className="mt-5 rounded-xl border border-dashed border-warn-500/40 bg-warn-500/[0.06] p-3">
           <div className="flex items-start justify-between gap-2">
@@ -171,11 +188,11 @@ export function OtpForm({
   );
 }
 
-function SubmitBtn() {
+function SubmitBtn({ disabled }: { disabled?: boolean }) {
   const { pending } = useFormStatus();
   const { l } = usePrefs();
   return (
-    <Button type="submit" size="lg" className="mt-5 w-full" loading={pending}>
+    <Button type="submit" size="lg" className="mt-5 w-full" loading={pending} disabled={disabled || pending}>
       {pending ? l("جارٍ التحقق…", "Verifying…") : l("تأكيد الدخول", "Confirm and sign in")}
     </Button>
   );

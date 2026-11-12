@@ -16,8 +16,10 @@ _Stack_
   <br>_Next.js 15 App Router — server components for reads, server actions for writes._
 - PostgreSQL 16 + Prisma/‏SQL مباشر — معاملات صريحة حول كل تغيير مالي أو أكاديمي.
   <br>_PostgreSQL 16 with Prisma or raw SQL — explicit transactions around every academic or graded change._
-- Redis (اختياري) لجلسات OTP والمعدّلات — قابل للاستبدال بجدول مؤقت.
-  <br>_Redis (optional) for OTP sessions and rate limits — replaceable with a transient table._
+- جلسات الخادم: في هذه النسخة تُحفظ في ملف حالة (`.data/auth-state.json` بصلاحية 0600) لتبقى بعد إعادة التشغيل، وفي الإنتاج Redis أو جدول `sessions`.
+  <br>_Server sessions: mirrored to a 0600 state file (`.data/auth-state.json`) so a restart does not sign everyone out; Redis or a `sessions` table in production._
+- Redis (اختياري) لتحديات OTP والمعدّلات — قابل للاستبدال بجدول مؤقت.
+  <br>_Redis (optional) for OTP challenges and rate limits — replaceable with a transient table._
 - تخزين كائنات للمرفقات (S3 متوافق) مع روابط موقّعة قصيرة العمر.
   <br>_Object storage for attachments (S3-compatible) with short-lived signed URLs._
 - طابور مهام للإشعارات والتصدير والتذكيرات — لا يُنفّذ داخل الطلب.

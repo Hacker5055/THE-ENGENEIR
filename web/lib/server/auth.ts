@@ -11,6 +11,8 @@ import "server-only";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
+import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import type { Permission, Role, SessionUser } from "@/lib/types";
 import { ROLE_PERMISSIONS, can } from "@/lib/permissions";
 import { DEMO_CREDENTIALS } from "./seed";
@@ -76,6 +78,52 @@ const runtime = globalThis as unknown as {
 };
 const sessions = (runtime.__AM_SESSIONS ??= new Map<string, ServerSession>());
 
+/**
+ * Sessions and pending 2FA challenges are mirrored to disk. A prototype runs as
+ * a single process that gets restarted (deploys, rebuilds, memory pressure);
+ * losing every cookie on restart is a real usability defect, not a security
+ * feature. Expiry, revocation and the attempt counter all still apply.
+ *
+ * Production replaces this file with Redis / a `sessions` table — the seam is
+ * this module only.
+ */
+const STATE_FILE = process.env.AM_STATE_FILE ?? join(process.cwd(), ".data", "auth-state.json");
+
+function persistState() {
+  try {
+    const now = Date.now();
+    const payload = {
+      savedAt: now,
+      sessions: [...sessions.entries()].filter(([, s]) => s.expiresAt > now),
+      pending: [...pending.entries()].filter(([, c]) => c.expiresAt > now),
+    };
+    mkdirSync(dirname(STATE_FILE), { recursive: true, mode: 0o700 });
+    const tmp = `${STATE_FILE}.${process.pid}.tmp`;
+    writeFileSync(tmp, JSON.stringify(payload), { mode: 0o600 });
+    renameSync(tmp, STATE_FILE);
+  } catch {
+    /* read-only filesystem: fall back to in-memory sessions */
+  }
+}
+
+function hydrateState() {
+  try {
+    const raw = JSON.parse(readFileSync(STATE_FILE, "utf8")) as {
+      sessions?: [string, ServerSession][];
+      pending?: [string, PendingChallenge][];
+    };
+    const now = Date.now();
+    for (const [token, session] of raw.sessions ?? []) {
+      if (session.expiresAt > now && !sessions.has(token)) sessions.set(token, session);
+    }
+    for (const [id, challenge] of raw.pending ?? []) {
+      if (challenge.expiresAt > now && !pending.has(id)) pending.set(id, challenge);
+    }
+  } catch {
+    /* first run — nothing to hydrate */
+  }
+}
+
 export async function getSessionUser(): Promise<SessionUser | null> {
   const token = (await cookies()).get(COOKIE)?.value;
   if (!token) return null;
@@ -83,6 +131,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   if (!session) return null;
   if (session.expiresAt < Date.now()) {
     sessions.delete(token);
+    persistState();
     return null;
   }
   const user = db().users.find((u) => u.id === session.userId);
@@ -101,6 +150,8 @@ interface PendingChallenge {
 }
 const pending = (runtime.__AM_PENDING ??= new Map<string, PendingChallenge>());
 
+hydrateState();
+
 export type SignInResult =
   | { ok: true; challengeId: string; demoCode: string; role: Role; name: string }
   | { ok: false; error: "INVALID" };
@@ -118,6 +169,7 @@ export async function startSignIn(email: string, password: string): Promise<Sign
   const challengeId = randomBytes(18).toString("base64url");
   const code = String(100000 + Math.floor(Math.random() * 900000));
   pending.set(challengeId, { userId: user.id, code, expiresAt: Date.now() + 5 * 60_000, attempts: 0, issuedAt: Date.now() });
+  persistState();
 
   pushAuthAudit(user.id, user.nameAr, user.role, "auth.password_verified", "تم التحقق من كلمة المرور — إصدار تحدي ثنائي", user.email, "INFO");
   // In production the code leaves via SMS / e-mail / push. The prototype
@@ -129,11 +181,14 @@ export async function resendChallenge(challengeId: string): Promise<{ ok: boolea
   const ch = pending.get(challengeId);
   if (!ch) return { ok: false };
   const waited = Date.now() - ch.issuedAt;
-  if (waited < 30_000) return { ok: false, retryInMs: 30_000 - waited };
+  // The 30-second floor prevents SMS pumping; once the code has expired the
+  // student is deliberately given an immediate path forward.
+  if (waited < 30_000 && ch.expiresAt > Date.now()) return { ok: false, retryInMs: 30_000 - waited };
   ch.code = String(100000 + Math.floor(Math.random() * 900000));
   ch.expiresAt = Date.now() + 5 * 60_000;
   ch.issuedAt = Date.now();
   ch.attempts = 0;
+  persistState();
   return { ok: true, demoCode: ch.code };
 }
 
@@ -145,14 +200,19 @@ export async function completeSignIn(
   if (!ch) return { ok: false, error: "EXPIRED" };
   if (ch.expiresAt < Date.now()) {
     pending.delete(challengeId);
+    persistState();
     return { ok: false, error: "EXPIRED" };
   }
   ch.attempts += 1;
   if (ch.attempts > 5) {
     pending.delete(challengeId);
+    persistState();
     return { ok: false, error: "LOCKED" };
   }
-  if (code.replace(/\D/g, "") !== ch.code) return { ok: false, error: "INVALID_CODE" };
+  if (code.replace(/\D/g, "") !== ch.code) {
+    persistState();
+    return { ok: false, error: "INVALID_CODE" };
+  }
 
   pending.delete(challengeId);
   const user = db().users.find((u) => u.id === ch.userId);
@@ -168,6 +228,7 @@ export async function completeSignIn(
     ip: "197.44.12.88",
     agent: "browser",
   });
+  persistState();
   (await cookies()).set(COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
@@ -187,6 +248,7 @@ export async function signOut() {
   const jar = await cookies();
   const token = jar.get(COOKIE)?.value;
   if (token) sessions.delete(token);
+  persistState();
   jar.delete(COOKIE);
 }
 
@@ -278,6 +340,7 @@ export async function devCreateSession(email: string) {
   const token = randomBytes(24).toString("base64url");
   const now = Date.now();
   sessions.set(token, { userId: user.id, role: user.role, issuedAt: now, expiresAt: now + SESSION_TTL_MS, ip: "127.0.0.1", agent: "dev" });
+  persistState();
   (await cookies()).set(COOKIE, token, { httpOnly: true, sameSite: "lax", path: "/", maxAge: SESSION_TTL_MS / 1000 });
   return { role: user.role, id: user.id };
 }
