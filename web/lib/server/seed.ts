@@ -407,6 +407,14 @@ export function buildSeed(): Database {
   // Demo student enrols in a blend: current level + one level-4 elective.
   demo.enrolledCourseIds = ["crs_cs301", "crs_cs302", "crs_cs401"];
 
+  // Students who hold seeded exam attempts share the demo cohort's courses, so
+  // "who may sit this exam" is consistent between the seed data and the server.
+  for (const s of students.slice(0, 12)) {
+    for (const cid of ["crs_cs301", "crs_cs302", "crs_cs401"]) {
+      if (!s.enrolledCourseIds.includes(cid)) s.enrolledCourseIds.push(cid);
+    }
+  }
+
   for (const c of courses) {
     c.enrolledCount = students.filter((s) => s.enrolledCourseIds.includes(c.id)).length;
   }
@@ -1475,6 +1483,46 @@ export function buildSeed(): Database {
     { id: "usr_supervisor", nameAr: "عمر الجندي", nameEn: "Omar El-Gendy", role: "EXAM_SUPERVISOR", email: "supervisor@almohandes.edu", institutionId: "inst_main", avatarHue: 32, title: "مراقب الاختبارات", passwordHash: "" },
     { id: "usr_root", nameAr: "أ.د. هاني عبد العال", nameEn: "Dr. Hany Abdel-Aal", role: "SUPER_ADMIN", email: "root@almohandes.edu", institutionId: "inst_main", avatarHue: 300, title: "مدير المنصة", passwordHash: "" },
   ];
+
+  // Every teacher and student also gets a working account so any record in the
+  // demo can be opened as that person. Passwords are assigned by role at
+  // bootstrap (see lib/server/auth.ts) — never stored in plain text.
+  const takenEmails = new Set(users.map((u) => u.email.toLowerCase()));
+  for (const t of teachers) {
+    const candidate = `${t.nameEn.toLowerCase().replace(/[^a-z]+/g, ".").replace(/^\.|\.$/g, "")}@almohandes.edu`;
+    const email = takenEmails.has(candidate) ? `t.${t.id}@almohandes.edu` : candidate;
+    takenEmails.add(email);
+    users.push({
+      id: `usr_${t.id}`,
+      nameAr: t.nameAr,
+      nameEn: t.nameEn,
+      role: "TEACHER",
+      email,
+      institutionId: t.institutionId,
+      teacherId: t.id,
+      avatarHue: (t.nameEn.length * 23) % 360,
+      title: t.title,
+      passwordHash: "",
+    });
+  }
+  for (const st of students) {
+    if (st.id === "stu_demo") continue;
+    const email = `${st.studentNumber.toLowerCase()}@almohandes.edu`;
+    if (takenEmails.has(email)) continue;
+    takenEmails.add(email);
+    users.push({
+      id: `usr_${st.id}`,
+      nameAr: st.nameAr,
+      nameEn: st.nameEn,
+      role: "STUDENT",
+      email,
+      institutionId: st.institutionId,
+      studentId: st.id,
+      avatarHue: (st.nameEn.length * 23) % 360,
+      title: `طالب — المستوى ${st.level}`,
+      passwordHash: "",
+    });
+  }
 
   return {
     bootAt: BOOT_AT,

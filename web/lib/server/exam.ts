@@ -50,10 +50,9 @@ export function gradeAttempt(attempt: ExaminationAttempt) {
 
   for (const question of attemptQuestions(attempt)) {
     const answer = attempt.answers.find((a) => a.questionId === question.id);
-    if (!answer) {
-      if (question.type === "ESSAY" || question.type === "FILE" || question.type === "MATCHING") pendingManual += 1;
-      continue;
-    }
+    // An unanswered question scores zero; it never blocks the attempt behind a
+    // human marker, because there is nothing for the marker to read.
+    if (!answer) continue;
     if (answer.awardedMarks !== undefined) {
       total += answer.awardedMarks;
       continue;
@@ -161,8 +160,54 @@ export function startAttempt(user: SessionUser, examId: string) {
   if (now < exam.startsAt) return { ok: false as const, error: "NOT_STARTED", message: "لم يبدأ وقت الاختبار بعد." };
   if (now > exam.endsAt) return { ok: false as const, error: "CLOSED", message: "انتهى وقت الاختبار." };
 
-  const attempt = db().attempts.find((a) => a.examinationId === examId && a.studentId === user.studentId);
-  if (!attempt) return { ok: false as const, error: "NO_ATTEMPT", message: "لا توجد محاولة مخصصة لك في هذا الاختبار." };
+  let attempt = db().attempts.find((a) => a.examinationId === examId && a.studentId === user.studentId);
+
+  // Enrolled students sit the exam without a pre-issued attempt row: the server
+  // mints one here, bounded by the examination's allowed-attempts policy.
+  if (!attempt) {
+    const student = db().students.find((st) => st.id === user.studentId);
+    if (!student) return { ok: false as const, error: "FORBIDDEN", message: "لا تملك صلاحية دخول هذا الاختبار." };
+    const enrolled =
+      student.enrolledCourseIds?.includes(exam.courseId) ||
+      db().courses.some((c) => c.id === exam.courseId && c.sectionId === student.sectionId);
+    if (!enrolled) return { ok: false as const, error: "FORBIDDEN", message: "هذا الاختبار ليس ضمن مقرراتك." };
+
+    const taken = db().attempts.filter(
+      (a) => a.examinationId === examId && a.studentId === user.studentId,
+    ).length;
+    if (taken >= exam.allowedAttempts) {
+      return { ok: false as const, error: "ATTEMPTS_EXHAUSTED", message: "استنفدت عدد المحاولات المسموح بها." };
+    }
+
+    const device = db().devices.find((d) => d.studentId === user.studentId && d.status === "ACTIVE");
+    attempt = {
+      id: `att_${user.studentId}_${Date.now().toString(36)}`,
+      examinationId: examId,
+      studentId: user.studentId!,
+      status: "NOT_STARTED",
+      serverNowOffsetMs: 0,
+      questionOrder: exam.randomizeQuestions
+        ? seededShuffle(exam.questionIds, hashSeed(`${user.studentId}:${now}`))
+        : [...exam.questionIds],
+      answers: [],
+      violations: 0,
+      maxScore: exam.totalMarks,
+      deviceId: device?.id ?? "dev_unregistered",
+      deviceLabel: device ? `${device.model || device.label} — ${device.managed ? "جهاز مُدار" : "جهاز شخصي"}` : "جهاز غير مسجّل",
+      ip: "10.20.0.1",
+      lastHeartbeat: now,
+    };
+    db().attempts.push(attempt);
+    pushAudit({
+      actorId: user.id,
+      actorName: user.nameAr,
+      actorRole: user.role,
+      action: "exam.attempt.created",
+      actionAr: "إنشاء محاولة اختبار للطالب",
+      target: attempt.id,
+      severity: "INFO",
+    });
+  }
   if (attempt.status === "LOCKED" || attempt.status === "CANCELLED") {
     return { ok: false as const, error: "LOCKED", message: "المحاولة مقيّدة. يلزم قرار من المراقب لاستئنافها." };
   }
@@ -207,7 +252,13 @@ export function startAttempt(user: SessionUser, examId: string) {
   return { ok: true as const, attemptId: attempt.id, resumed: false };
 }
 
-export function saveAnswer(attempt: ExaminationAttempt, questionId: string, value: string[], textValue?: string) {
+export function saveAnswer(
+  attempt: ExaminationAttempt,
+  questionId: string,
+  value: string[],
+  textValue?: string,
+  nextRevision?: number,
+) {
   if (attempt.status === "LOCKED" || attempt.status === "CANCELLED") {
     return { ok: false as const, error: "LOCKED", message: "المحاولة مقيّدة ولا يمكن حفظ إجابات جديدة." };
   }
@@ -224,6 +275,19 @@ export function saveAnswer(attempt: ExaminationAttempt, questionId: string, valu
 
   const existing = attempt.answers.find((a) => a.questionId === questionId);
   const now = Date.now();
+
+  // Optimistic concurrency: the client sends the revision it intends to write.
+  // A stale tab (or a retried request) can never overwrite a newer answer.
+  const expectedRevision = existing ? existing.revision + 1 : 1;
+  if (nextRevision != null && nextRevision !== expectedRevision) {
+    return {
+      ok: false as const,
+      error: "REVISION_CONFLICT",
+      message: "نسخة أقدم من المحفوظة على الخادم — أعد تحميل الحالة.",
+      currentRevision: existing?.revision ?? 0,
+    };
+  }
+
   if (existing) {
     existing.value = value;
     existing.textValue = textValue ?? existing.textValue;
@@ -248,7 +312,9 @@ export function submitAttempt(attempt: ExaminationAttempt) {
   attempt.lastHeartbeat = Date.now();
 
   const { score, pendingManual } = gradeAttempt(attempt);
-  attempt.status = pendingManual > 0 ? (exam.autoGrade ? "SUBMITTED" : "SUBMITTED") : "GRADED";
+  // Objective items are final; any essay/file answer keeps the attempt open for
+  // a human marker instead of silently awarding zero.
+  attempt.status = pendingManual > 0 ? "SUBMITTED" : "GRADED";
   if (attempt.status === "GRADED" && exam.resultPublished) {
     attempt.publishedAt = Date.now();
   }
@@ -282,7 +348,7 @@ export function submitAttempt(attempt: ExaminationAttempt) {
       priority: "HIGH",
     });
   }
-  return { ok: true as const, already: false, attemptId: attempt.id, score, pendingManual };
+  return { ok: true as const, already: false, attemptId: attempt.id, score, pendingManual, status: attempt.status };
 }
 
 export function publicAttemptState(attempt: ExaminationAttempt) {

@@ -86,6 +86,8 @@ export function ExamRunner({
   const [warning, setWarning] = useState<string | null>(null);
   const [focusStrikes, setFocusStrikes] = useState(0);
   const pendingRef = useRef<Record<string, number>>({});
+  // Last revision the server confirmed per question (optimistic concurrency).
+  const revisions = useRef<Record<string, number>>({});
   const blurTimer = useRef<number | null>(null);
   const submittedRef = useRef(false);
 
@@ -132,16 +134,26 @@ export function ExamRunner({
 
   /* ------------------------------ saving ------------------------------- */
   const persist = useCallback(
-    async (questionId: string, payload: { value: string[]; textValue: string; flagged: boolean }) => {
+    async (questionId: string, payload: { value: string[]; textValue: string; flagged: boolean }, retry = 0) => {
       setSaveStates((s) => ({ ...s, [questionId]: "saving" }));
       try {
         const res = await fetch(`/api/v1/exam/attempts/${attemptId}/answer`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ questionId, value: payload.value, textValue: payload.textValue }),
+          body: JSON.stringify({
+            questionId,
+            value: payload.value,
+            textValue: payload.textValue,
+            revision: (revisions.current[questionId] ?? 0) + 1,
+          }),
         });
         const data = await res.json();
         if (!res.ok) {
+          if (data.error === "REVISION_CONFLICT" && retry < 1) {
+            // Another tab saved first — adopt its revision and write once more.
+            revisions.current[questionId] = data.currentRevision ?? 0;
+            return persist(questionId, payload, retry + 1);
+          }
           if (data.error === "LOCKED" || data.error === "SUBMITTED" || data.error === "EXPIRED") {
             setStatus(data.attemptStatus ?? (data.error === "LOCKED" ? "LOCKED" : "SUBMITTED"));
             setSaveStates((s) => ({ ...s, [questionId]: "error" }));
@@ -152,6 +164,7 @@ export function ExamRunner({
         }
         if (data.attemptStatus) setStatus(data.attemptStatus);
         if (typeof data.violations === "number") setViolations(data.violations);
+        if (typeof data.revision === "number") revisions.current[questionId] = data.revision;
         setSaveStates((s) => ({ ...s, [questionId]: "saved" }));
         setAnswers((prev) => ({ ...prev, [questionId]: { ...prev[questionId], savedAt: data.savedAt } }));
       } catch {

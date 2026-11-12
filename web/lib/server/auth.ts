@@ -40,6 +40,18 @@ function bootstrapAccounts() {
     const u = users.find((x) => x.email === cred.email);
     if (u && !u.passwordHash) u.passwordHash = hash(cred.password);
   }
+  // Seeded teachers and students share a role-based demo password so every
+  // record in the dataset can be inspected while signed in as that person.
+  const ROLE_PASSWORD: Record<Role, string> = {
+    STUDENT: "Student@123",
+    TEACHER: "Teacher@123",
+    EXAM_SUPERVISOR: "Super@123",
+    INSTITUTION_ADMIN: "Admin@123",
+    SUPER_ADMIN: "Root@123",
+  };
+  for (const u of users) {
+    if (!u.passwordHash) u.passwordHash = hash(ROLE_PASSWORD[u.role]);
+  }
   bootstrapped = true;
 }
 

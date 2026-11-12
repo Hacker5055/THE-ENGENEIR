@@ -15,7 +15,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const attempt = findAttempt(id);
   if (!attempt || attempt.studentId !== user.studentId) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
 
-  let body: { questionId?: string; value?: string[]; textValue?: string };
+  let body: { questionId?: string; value?: string[]; textValue?: string; revision?: number };
   try {
     body = await req.json();
   } catch {
@@ -23,9 +23,23 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   }
   if (!body.questionId) return NextResponse.json({ error: "INVALID_BODY" }, { status: 400 });
 
-  const result = saveAnswer(attempt, body.questionId, Array.isArray(body.value) ? body.value.slice(0, 10) : [], body.textValue?.slice(0, 8000));
+  const result = saveAnswer(
+    attempt,
+    body.questionId,
+    Array.isArray(body.value) ? body.value.slice(0, 10) : [],
+    body.textValue?.slice(0, 8000),
+    typeof body.revision === "number" ? body.revision : undefined,
+  );
   if (!result.ok) {
-    return NextResponse.json({ error: result.error, message: result.message, attemptStatus: attempt.status }, { status: 409 });
+    return NextResponse.json(
+      {
+        error: result.error,
+        message: result.message,
+        attemptStatus: attempt.status,
+        currentRevision: "currentRevision" in result ? result.currentRevision : undefined,
+      },
+      { status: 409 },
+    );
   }
   return NextResponse.json({ ...result, attemptStatus: attempt.status, violations: attempt.violations });
 }
