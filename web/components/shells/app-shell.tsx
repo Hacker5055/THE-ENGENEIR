@@ -291,7 +291,17 @@ export function AppShell({
       </div>
 
       {/* command palette — pages + live entity search */}
-      <Modal open={paletteOpen} onClose={() => setPaletteOpen(false)} title={l("البحث والتنقل السريع", "Search & quick navigation")} size="md">
+      <Modal
+        open={paletteOpen}
+        onClose={() => {
+          setPaletteOpen(false);
+          setQuery("");
+          setHits([]);
+          setCursor(0);
+        }}
+        title={l("البحث والتنقل السريع", "Search & quick navigation")}
+        size="md"
+      >
         <div className="relative mb-3">
           <Icon name="search" size={15} className="absolute start-3 top-1/2 -translate-y-1/2 text-fg-muted" />
           <input

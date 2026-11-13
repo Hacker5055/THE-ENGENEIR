@@ -97,6 +97,7 @@ export const TEACHER_NAV: NavGroup[] = [
 ];
 
 export const STUDENT_MORE = [
+  { href: "/student/search", labelAr: "البحث", labelEn: "Search", icon: "search" as IconName },
   { href: "/student/profile", labelAr: "الملف الشخصي", labelEn: "Profile", icon: "user" as IconName },
   { href: "/student/id", labelAr: "الهوية الرقمية", labelEn: "Digital ID", icon: "id-card" as IconName },
   { href: "/student/courses", labelAr: "المقررات", labelEn: "Courses", icon: "book" as IconName },
