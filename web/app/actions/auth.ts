@@ -12,6 +12,7 @@ export interface LoginState {
 export async function loginAction(_prev: LoginState, formData: FormData): Promise<LoginState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const next = String(formData.get("next") ?? "").trim();
 
   if (!email || !password) {
     return { error: "يرجى إدخال البريد المؤسسي وكلمة المرور.", email };
@@ -36,13 +37,15 @@ export async function loginAction(_prev: LoginState, formData: FormData): Promis
   // The challenge id also travels in the URL: some embedded/preview browsers
   // drop short-lived cookies between two navigations, and losing the id turned
   // a valid code into a dead end.
-  redirect(`/verify?c=${encodeURIComponent(result.challengeId)}`);
+  const carry = next.startsWith("/") && !next.startsWith("//") ? `&next=${encodeURIComponent(next)}` : "";
+  redirect(`/verify?c=${encodeURIComponent(result.challengeId)}${carry}`);
 }
 
 export async function verifyAction(_prev: LoginState, formData: FormData): Promise<LoginState> {
   const fromForm = String(formData.get("challenge") ?? "").trim();
   const challengeId = fromForm || (await cookies()).get("am_pending")?.value;
   const code = String(formData.get("code") ?? "");
+  const next = String(formData.get("next") ?? "").trim();
   if (!challengeId) {
     return { error: "انتهت جلسة التحقق أو أُغلقت. سجّل الدخول من جديد — لن تفقد شيئاً." };
   }
@@ -61,7 +64,8 @@ export async function verifyAction(_prev: LoginState, formData: FormData): Promi
   (await cookies()).delete("am_pending");
   // Land on /welcome first: it verifies the session cookie actually reached the
   // browser, and explains what to do when it did not (blocked/third-party).
-  redirect("/welcome");
+  const carry = next.startsWith("/") && !next.startsWith("//") ? `?next=${encodeURIComponent(next)}` : "";
+  redirect(`/welcome${carry}`);
 }
 
 export async function resendOtpAction(

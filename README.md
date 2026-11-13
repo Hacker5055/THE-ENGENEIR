@@ -127,7 +127,7 @@ npm run dev              # تشغيل محلي
 npm run build            # بناء الإنتاج
 npm run docs:export      # إعادة توليد docs/*.md من web/lib/docs.ts
 npm run typecheck        # فحص الأنواع فقط
-npm run smoke            # اختبار E2E شامل ضد خادم يعمل على :3000 (23 فحصاً)
+npm run smoke            # اختبار E2E شامل ضد خادم يعمل على :3000 (27 فحصاً)
 ```
 
 > حالة التسليم الحالية بالأرقام وما هو مُتحقَّق منه فعلياً: [`STATUS.md`](STATUS.md).

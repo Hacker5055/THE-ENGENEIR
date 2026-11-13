@@ -15,12 +15,14 @@ export function OtpForm({
   email,
   name,
   expiresInMs,
+  next,
 }: {
   challengeId: string;
   demoCode: string;
   email: string;
   name: string;
   expiresInMs: number;
+  next?: string;
 }) {
   const { l } = usePrefs();
   const { toast } = useToast();
@@ -115,6 +117,7 @@ export function OtpForm({
       <form ref={formRef} action={action} className="mt-6">
         <input type="hidden" name="code" value={digits.join("")} />
         <input type="hidden" name="challenge" value={challengeId} />
+        {next && <input type="hidden" name="next" value={next} />}
         <fieldset>
           <legend className="mb-2 text-xs font-medium text-fg-soft">{l("رمز التحقق", "Verification code")}</legend>
           <div className="flex justify-between gap-2" dir="ltr" onPaste={onPaste}>

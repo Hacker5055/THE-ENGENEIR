@@ -103,12 +103,13 @@ export default async function LoginPage({
               </span>
             </div>
           )}
-          <LoginForm initialEmail={role ? ROLE_EMAIL[role] : undefined} />
+          <LoginForm initialEmail={role ? ROLE_EMAIL[role] : undefined} next={next} />
           {/* No-JS / failed-hydration fallback: a plain HTML form posting to a
               route handler, so sign-in never depends on the client bundle. */}
           <noscript>
             <form action="/api/auth/sign-in" method="post" className="mt-4 w-full max-w-[400px] space-y-2 rounded-xl border border-line bg-surface p-4">
               <p className="text-[11.5px] font-medium text-fg-soft">{tx(locale, "الدخول بدون جافاسكربت", "Sign in without JavaScript")}</p>
+              {next && <input type="hidden" name="next" value={next} />}
               <input name="email" type="email" required placeholder={tx(locale, "البريد المؤسسي", "Institutional email")} className="h-10 w-full rounded-lg border border-line-strong bg-bg-elevated px-3 text-[12px] text-fg" />
               <input name="password" type="password" required placeholder={tx(locale, "كلمة المرور", "Password")} className="h-10 w-full rounded-lg border border-line-strong bg-bg-elevated px-3 text-[12px] text-fg" />
               <button type="submit" className="h-10 w-full rounded-lg bg-brand-500 text-[12px] font-semibold text-white">{tx(locale, "متابعة", "Continue")}</button>

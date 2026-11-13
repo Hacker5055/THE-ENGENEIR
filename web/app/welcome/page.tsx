@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { LogoMark } from "@/components/brand/logo";
 import { getSessionUser, HOME_FOR_ROLE } from "@/lib/server/auth";
+import { safeNextForRole } from "@/lib/route-guard";
 import { getPrefs } from "@/lib/prefs";
 import { tx } from "@/lib/utils";
 
@@ -17,9 +18,14 @@ export const dynamic = "force-dynamic";
  * embedded preview, for example — we say so in plain language instead of
  * looping the user back to the login screen with a misleading "expired" error.
  */
-export default async function WelcomePage() {
+export default async function WelcomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
   const user = await getSessionUser();
-  if (user) redirect(HOME_FOR_ROLE[user.role]);
+  const { next } = await searchParams;
+  if (user) redirect(safeNextForRole(next, user.role) ?? HOME_FOR_ROLE[user.role]);
 
   const { locale } = await getPrefs();
   const h = await headers();

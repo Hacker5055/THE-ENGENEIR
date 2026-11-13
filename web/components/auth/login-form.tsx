@@ -12,7 +12,7 @@ import { cx } from "@/lib/utils";
 
 const ROLE_ORDER = ["STUDENT", "TEACHER", "INSTITUTION_ADMIN", "EXAM_SUPERVISOR", "SUPER_ADMIN"] as const;
 
-export function LoginForm({ initialEmail }: { initialEmail?: string }) {
+export function LoginForm({ initialEmail, next }: { initialEmail?: string; next?: string }) {
   const { l } = usePrefs();
   const [state, action] = useActionState<LoginState, FormData>(loginAction, {});
   const [email, setEmail] = useState(initialEmail ?? "");
@@ -43,6 +43,7 @@ export function LoginForm({ initialEmail }: { initialEmail?: string }) {
         )}
 
         <form action={action} className="space-y-4" noValidate>
+          {next && <input type="hidden" name="next" value={next} />}
           <Field label={l("البريد المؤسسي", "Institutional email")} htmlFor="email" required>
             <Input
               id="email"

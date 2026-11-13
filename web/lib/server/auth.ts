@@ -9,6 +9,7 @@
 
 import "server-only";
 import { cookies, headers } from "next/headers";
+import { ROLE_HOME } from "@/lib/route-guard";
 import { redirect } from "next/navigation";
 import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
@@ -19,6 +20,7 @@ import { DEMO_CREDENTIALS } from "./seed";
 import { db } from "./store";
 
 const COOKIE = "am_session";
+const ROLE_COOKIE = "am_role";
 
 /**
  * A `Secure` cookie is silently dropped when the app is reached over plain HTTP
@@ -245,13 +247,18 @@ export async function completeSignIn(
     agent: "browser",
   });
   persistState();
-  (await cookies()).set(COOKIE, token, {
+  const secure = await cookieSecure();
+  const jar = await cookies();
+  jar.set(COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: await cookieSecure(),
+    secure,
     path: "/",
     maxAge: SESSION_TTL_MS / 1000,
   });
+  // Routing hint only (which portal to bounce to). Never an authorization
+  // input: every page/action re-checks the session and permissions server-side.
+  jar.set(ROLE_COOKIE, user.role, { httpOnly: true, sameSite: "lax", secure, path: "/", maxAge: SESSION_TTL_MS / 1000 });
   pushAuthAudit(user.id, user.nameAr, user.role, "auth.sign_in", "تسجيل دخول ناجح بعد التحقق الثنائي", user.email, "INFO");
   return { ok: true, role: user.role, token };
 }
@@ -266,18 +273,13 @@ export async function signOut() {
   if (token) sessions.delete(token);
   persistState();
   jar.delete(COOKIE);
+  jar.delete(ROLE_COOKIE);
 }
 
 /* ------------------------------ permissions ---------------------------- */
 export { ROLE_PERMISSIONS, can } from "@/lib/permissions";
 
-export const HOME_FOR_ROLE: Record<Role, string> = {
-  STUDENT: "/student",
-  TEACHER: "/teacher",
-  INSTITUTION_ADMIN: "/admin",
-  EXAM_SUPERVISOR: "/admin/exam-control",
-  SUPER_ADMIN: "/admin",
-};
+export const HOME_FOR_ROLE: Record<Role, string> = ROLE_HOME;
 
 export async function requireUser(): Promise<SessionUser> {
   const user = await getSessionUser();
@@ -357,12 +359,17 @@ export async function devCreateSession(email: string) {
   const now = Date.now();
   sessions.set(token, { userId: user.id, role: user.role, issuedAt: now, expiresAt: now + SESSION_TTL_MS, ip: "127.0.0.1", agent: "dev" });
   persistState();
-  (await cookies()).set(COOKIE, token, {
+  const secure = await cookieSecure();
+  const jar = await cookies();
+  jar.set(COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: await cookieSecure(),
+    secure,
     path: "/",
     maxAge: SESSION_TTL_MS / 1000,
   });
+  // Routing hint only (which portal to bounce to). Never an authorization
+  // input: every page/action re-checks the session and permissions server-side.
+  jar.set(ROLE_COOKIE, user.role, { httpOnly: true, sameSite: "lax", secure, path: "/", maxAge: SESSION_TTL_MS / 1000 });
   return { role: user.role, id: user.id };
 }

@@ -13,6 +13,7 @@ export async function POST(req: Request) {
   if (!form) return NextResponse.redirect(new URL("/login?expired=1", origin), 303);
 
   const code = String(form.get("code") ?? "").replace(/\D/g, "");
+  const next = String(form.get("next") ?? "").trim();
   const fromForm = String(form.get("challenge") ?? "").trim();
   const challengeId = fromForm || (await cookies()).get("am_pending")?.value || "";
   const keep = challengeId ? `?c=${encodeURIComponent(challengeId)}` : "";
@@ -27,7 +28,8 @@ export async function POST(req: Request) {
   }
 
   (await cookies()).delete("am_pending");
-  const res = NextResponse.redirect(new URL("/welcome", origin), 303);
+  const carry = next.startsWith("/") && !next.startsWith("//") ? `?next=${encodeURIComponent(next)}` : "";
+  const res = NextResponse.redirect(new URL(`/welcome${carry}`, origin), 303);
   // Re-assert the session cookie on this response so the redirect always
   // carries a credential, whatever the cookie jar did with `am_pending`.
   const jar = await cookies();

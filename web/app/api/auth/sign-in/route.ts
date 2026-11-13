@@ -13,17 +13,20 @@ export async function POST(req: Request) {
   const origin = requestOrigin(req);
   let email = "";
   let password = "";
+  let next = "";
 
   try {
     const contentType = req.headers.get("content-type") ?? "";
     if (contentType.includes("application/json")) {
-      const body = (await req.json()) as { email?: string; password?: string };
+      const body = (await req.json()) as { email?: string; password?: string; next?: string };
       email = body.email ?? "";
       password = body.password ?? "";
+      next = body.next ?? "";
     } else {
       const form = await req.formData();
       email = String(form.get("email") ?? "");
       password = String(form.get("password") ?? "");
+      next = String(form.get("next") ?? "");
     }
   } catch {
     return NextResponse.redirect(new URL("/login?expired=1", origin), 303);
@@ -42,7 +45,8 @@ export async function POST(req: Request) {
     secure: await cookieSecure(),
   });
 
-  return NextResponse.redirect(new URL(`/verify?c=${encodeURIComponent(result.challengeId)}`, origin), 303);
+  const carry = next.startsWith("/") && !next.startsWith("//") ? `&next=${encodeURIComponent(next)}` : "";
+  return NextResponse.redirect(new URL(`/verify?c=${encodeURIComponent(result.challengeId)}${carry}`, origin), 303);
 }
 
 /**

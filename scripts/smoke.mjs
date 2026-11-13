@@ -78,9 +78,9 @@ function codeFor(challengeId) {
 }
 
 /* ------------------------------- sign in -------------------------------- */
-async function signIn(email, password) {
+async function signIn(email, password, next) {
   const c = jar();
-  const res = await req("/api/auth/sign-in", { method: "POST", body: { email, password }, cookie: c });
+  const res = await req("/api/auth/sign-in", { method: "POST", body: { email, password, ...(next ? { next } : {}) }, cookie: c });
   const location = res.headers.get("location") ?? "";
   const challenge = new URL(location, BASE).searchParams.get("c");
   if (res.status !== 303 || !challenge) return { ok: false, reason: `sign-in ${res.status}` };
@@ -90,11 +90,11 @@ async function signIn(email, password) {
 
   const verify = await req("/api/auth/verify", {
     method: "POST",
-    body: { challenge, code },
+    body: { challenge, code, ...(next ? { next } : {}) },
     cookie: c,
   });
   const ok = verify.status === 303 && Boolean(c.get("am_session"));
-  return { ok, cookie: c, reason: ok ? "" : `verify ${verify.status}` };
+  return { ok, cookie: c, location: verify.headers.get("location") ?? "", reason: ok ? "" : `verify ${verify.status}` };
 }
 
 /* --------------------------------- data --------------------------------- */
@@ -135,6 +135,11 @@ console.log(`\nAL MOHANDES — smoke test against ${BASE}\n`);
 
 const anonymous = await req("/admin", { cookie: jar() });
 check("anonymous /admin is redirected to login", anonymous.status === 307, `status ${anonymous.status}`);
+check(
+  "anonymous redirect carries a same-origin login path",
+  (anonymous.headers.get("location") ?? "").includes("/login?next=%2Fadmin"),
+  anonymous.headers.get("location") ?? "",
+);
 
 const sessions = {};
 for (const [role, [email, password]] of Object.entries(ACCOUNTS)) {
@@ -142,6 +147,25 @@ for (const [role, [email, password]] of Object.entries(ACCOUNTS)) {
   sessions[role] = res.cookie;
   check(`${role} sign-in + 2FA + session cookie`, res.ok, res.reason);
 }
+
+// Deep link: /admin/complaints must survive the whole sign-in chain.
+const deep = await signIn("admin@almohandes.edu", "Admin@123", "/admin/complaints");
+check("deep link is carried into the verify step", deep.ok && deep.location.includes("next="), deep.location);
+const deepLanding = await req("/welcome?next=%2Fadmin%2Fcomplaints", { cookie: deep.cookie });
+check(
+  "deep link lands on the requested page",
+  deepLanding.status === 307 && (deepLanding.headers.get("location") ?? "").endsWith("/admin/complaints"),
+  `${deepLanding.status} → ${deepLanding.headers.get("location")}`,
+);
+
+// A signed-in student must not be able to jump into /admin through `next`.
+const studentDeep = await signIn("student@almohandes.edu", "Student@123", "/admin/audit");
+const blocked = await req("/welcome?next=%2Fadmin%2Faudit", { cookie: studentDeep.cookie });
+check(
+  "cross-role deep link falls back to the student home",
+  blocked.status === 307 && (blocked.headers.get("location") ?? "").endsWith("/student"),
+  `${blocked.status} → ${blocked.headers.get("location")}`,
+);
 
 for (const [role, routes] of Object.entries(ROUTES)) {
   const cookie = role === "public" ? jar() : sessions[role === "root" ? "root" : role];
