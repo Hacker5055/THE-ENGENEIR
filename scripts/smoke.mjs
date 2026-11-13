@@ -182,6 +182,15 @@ for (const [role, routes] of Object.entries(ROUTES)) {
 
 /* ------------------------------ exam engine ----------------------------- */
 if (sessions.student) {
+  // Make the run repeatable against a long-running server: clear yesterday's
+  // attempt for the demo student (dev-only endpoint).
+  await req("/api/dev/reset", {
+    method: "POST",
+    body: JSON.stringify({ examId: "exm_ds_mid", studentId: "stu_demo" }),
+    cookie: sessions.admin,
+    headers: { "content-type": "application/json" },
+  });
+
   const start = await req("/api/v1/exam/examinations/exm_ds_mid/start", {
     method: "POST", body: {}, cookie: sessions.student, headers: { "content-type": "application/json" },
   });
