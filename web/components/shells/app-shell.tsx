@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon, type IconName } from "@/components/icons";
 import { Avatar, Badge, Button, Modal } from "@/components/ui";
 import { usePrefs } from "@/components/providers";
@@ -13,6 +13,29 @@ import type { SessionUser } from "@/lib/types";
 import { ROLE_PERMISSIONS } from "@/lib/permissions";
 import { cx } from "@/lib/utils";
 import { logoutAction } from "@/app/actions/auth";
+
+type SearchHit = { kind: string; title: string; subtitle: string; href: string };
+type SearchGroup = { key: string; items: SearchHit[] };
+
+const KIND_ICON: Record<string, IconName> = {
+  student: "graduation",
+  teacher: "user-check",
+  course: "book",
+  exam: "clipboard",
+  complaint: "inbox",
+  institution: "building",
+  question: "file-text",
+};
+
+const GROUP_LABEL: Record<string, { ar: string; en: string }> = {
+  students: { ar: "الطلاب", en: "Students" },
+  teachers: { ar: "هيئة التدريس", en: "Teachers" },
+  courses: { ar: "المقررات", en: "Courses" },
+  exams: { ar: "الاختبارات", en: "Exams" },
+  complaints: { ar: "الشكاوى", en: "Complaints" },
+  institutions: { ar: "المؤسسات", en: "Institutions" },
+  questions: { ar: "بنك الأسئلة", en: "Questions" },
+};
 
 const ROLE_LABEL: Record<string, { ar: string; en: string }> = {
   SUPER_ADMIN: { ar: "مدير المنصة", en: "Super admin" },
@@ -43,6 +66,11 @@ export function AppShell({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [hits, setHits] = useState<SearchGroup[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [cursor, setCursor] = useState(0);
+  const router = useRouter();
+  const listRef = useRef<HTMLDivElement | null>(null);
 
   const allowed = ROLE_PERMISSIONS[user.role] ?? [];
   const groups = useMemo(
@@ -54,6 +82,11 @@ export function AppShell({
   );
 
   const allItems = groups.flatMap((g) => g.items);
+
+  const pageHits = allItems
+    .filter((i) => !query.trim() || `${i.labelAr} ${i.labelEn} ${i.href}`.toLowerCase().includes(query.toLowerCase()))
+    .slice(0, 5);
+  const flat = [...pageHits.map((p) => ({ href: p.href })), ...hits.flatMap((g) => g.items.map((i) => ({ href: i.href })))];
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -67,6 +100,35 @@ export function AppShell({
   }, []);
 
   useEffect(() => setMobileOpen(false), [pathname]);
+
+  // Entity search behind the ⌘K palette (debounced, cancelled on change).
+  useEffect(() => {
+    const term = query.trim();
+    if (term.length < 2) {
+      setHits([]);
+      setSearching(false);
+      return;
+    }
+    const controller = new AbortController();
+    setSearching(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/v1/search?q=${encodeURIComponent(term)}`, { signal: controller.signal });
+        const data = (await res.json()) as { groups?: SearchGroup[] };
+        setHits(data.groups ?? []);
+      } catch {
+        // aborted or offline — keep the previous results
+      } finally {
+        setSearching(false);
+      }
+    }, 180);
+    return () => {
+      controller.abort();
+      clearTimeout(timer);
+    };
+  }, [query]);
+
+  useEffect(() => setCursor(0), [query]);
 
   const isActive = (href: string) => (href === "/admin" || href === "/teacher" ? pathname === href : pathname.startsWith(href));
 
@@ -194,6 +256,13 @@ export function AppShell({
           </button>
 
           <div className="ms-auto flex items-center gap-1.5">
+            <button
+              onClick={() => setPaletteOpen(true)}
+              className="grid size-9 place-items-center rounded-lg border border-line text-fg-muted transition hover:text-fg md:hidden"
+              aria-label={l("بحث", "Search")}
+            >
+              <Icon name="search" size={16} />
+            </button>
             <Link
               href={notificationsHref}
               className="relative grid size-9 place-items-center rounded-lg border border-line text-fg-muted transition hover:text-fg"
@@ -221,38 +290,109 @@ export function AppShell({
         <main className="flex-1 pb-16">{children}</main>
       </div>
 
-      {/* command palette */}
-      <Modal open={paletteOpen} onClose={() => setPaletteOpen(false)} title={l("التنقل السريع", "Quick navigation")} size="md">
+      {/* command palette — pages + live entity search */}
+      <Modal open={paletteOpen} onClose={() => setPaletteOpen(false)} title={l("البحث والتنقل السريع", "Search & quick navigation")} size="md">
         <div className="relative mb-3">
           <Icon name="search" size={15} className="absolute start-3 top-1/2 -translate-y-1/2 text-fg-muted" />
           <input
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={l("اكتب اسم الصفحة…", "Type a page name…")}
+            onKeyDown={(e) => {
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+                setCursor((c) => Math.min(c + 1, flat.length - 1));
+              } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                setCursor((c) => Math.max(c - 1, 0));
+              } else if (e.key === "Enter") {
+                const target = flat[cursor];
+                if (target) {
+                  e.preventDefault();
+                  setPaletteOpen(false);
+                  router.push(target.href);
+                }
+              }
+            }}
+            placeholder={l("ابحث عن طالب، مقرر، اختبار، شكوى، أو صفحة…", "Search students, courses, exams, complaints, or pages…")}
             className="h-10 w-full rounded-lg border border-line-strong bg-bg-elevated ps-9 pe-3 text-[13px] text-fg placeholder:text-fg-muted focus:border-accent-500/60 focus:outline-none"
+            aria-label={l("بحث", "Search")}
           />
+          {searching && <span className="absolute end-3 top-1/2 size-3.5 -translate-y-1/2 animate-spin rounded-full border-2 border-line-strong border-t-accent-500" aria-hidden="true" />}
         </div>
-        <ul className="space-y-0.5">
-          {allItems
-            .filter((i) => !query || `${i.labelAr} ${i.labelEn} ${i.href}`.toLowerCase().includes(query.toLowerCase()))
-            .map((i) => (
-              <li key={i.href}>
-                <Link
-                  href={i.href}
-                  onClick={() => setPaletteOpen(false)}
-                  className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[12.5px] text-fg-soft transition hover:bg-surface-2 hover:text-fg"
-                >
-                  <Icon name={i.icon} size={15} className="text-fg-muted" />
-                  <span className="flex-1">{l(i.labelAr, i.labelEn)}</span>
-                  <span className="font-mono text-[10px] text-fg-muted">{i.href}</span>
-                </Link>
-              </li>
-            ))}
-        </ul>
-        {allItems.filter((i) => !query || `${i.labelAr} ${i.labelEn}`.toLowerCase().includes(query.toLowerCase())).length === 0 && (
-          <p className="py-6 text-center text-xs text-fg-muted">{l("لا توجد نتائج", "No results")}</p>
-        )}
+
+        <div ref={listRef} className="max-h-[min(60vh,26rem)] space-y-3 overflow-y-auto pe-0.5">
+          {pageHits.length > 0 && (
+            <section>
+              <p className="mb-1 px-2.5 text-[10px] font-semibold uppercase tracking-wide text-fg-muted">{l("الصفحات", "Pages")}</p>
+              <ul className="space-y-0.5">
+                {pageHits.map((i) => (
+                  <li key={`page-${i.href}`}>
+                    <Link
+                      href={i.href}
+                      onClick={() => setPaletteOpen(false)}
+                      className={cx(
+                        "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[12.5px] transition",
+                        flat[cursor]?.href === i.href ? "bg-surface-2 text-fg" : "text-fg-soft hover:bg-surface-2 hover:text-fg",
+                      )}
+                    >
+                      <Icon name={i.icon} size={15} className="text-fg-muted" />
+                      <span className="flex-1">{l(i.labelAr, i.labelEn)}</span>
+                      <span className="font-mono text-[10px] text-fg-muted">{i.href}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {hits.map((group) => (
+            <section key={group.key}>
+              <p className="mb-1 px-2.5 text-[10px] font-semibold uppercase tracking-wide text-fg-muted">
+                {l(GROUP_LABEL[group.key]?.ar ?? group.key, GROUP_LABEL[group.key]?.en ?? group.key)}
+              </p>
+              <ul className="space-y-0.5">
+                {group.items.map((item) => (
+                  <li key={`${item.kind}-${item.href}-${item.title}`}>
+                    <Link
+                      href={item.href}
+                      onClick={() => setPaletteOpen(false)}
+                      className={cx(
+                        "flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition",
+                        flat[cursor]?.href === item.href ? "bg-surface-2 text-fg" : "text-fg-soft hover:bg-surface-2 hover:text-fg",
+                      )}
+                    >
+                      <Icon name={KIND_ICON[item.kind] ?? "file-text"} size={15} className="text-fg-muted" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[12.5px]">{item.title}</span>
+                        <span className="block truncate text-[10.5px] text-fg-muted">{item.subtitle}</span>
+                      </span>
+                      <Icon name="arrow-up-right" size={12} className="text-fg-muted" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+
+          {!searching && pageHits.length === 0 && hits.length === 0 && (
+            <div className="py-8 text-center">
+              <Icon name="search" size={20} className="mx-auto text-fg-muted" />
+              <p className="mt-2 text-xs text-fg-muted">
+                {query.trim().length >= 2
+                  ? l("لا توجد نتائج مطابقة", "No matching results")
+                  : l("اكتب حرفين على الأقل للبحث في بيانات المؤسسة", "Type at least two characters to search the institution")}
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-3 flex items-center gap-3 border-t border-line pt-2 text-[10px] text-fg-muted">
+          <span className="flex items-center gap-1"><kbd className="rounded border border-line px-1 font-mono">↑</kbd><kbd className="rounded border border-line px-1 font-mono">↓</kbd> {l("تنقّل", "move")}</span>
+          <span className="flex items-center gap-1"><kbd className="rounded border border-line px-1 font-mono">↵</kbd> {l("فتح", "open")}</span>
+          <span className="flex items-center gap-1"><kbd className="rounded border border-line px-1 font-mono">esc</kbd> {l("إغلاق", "close")}</span>
+          {hits.length > 0 && <span className="ms-auto">{hits.reduce((n, g) => n + g.items.length, 0)} {l("نتيجة", "results")}</span>}
+        </div>
       </Modal>
     </div>
   );

@@ -104,7 +104,7 @@ const ROUTES = {
     "/student/courses/crs_cs301", "/student/exams", "/student/exams/exm_ds_mid",
     "/student/results", "/student/transcript", "/student/analytics", "/student/id",
     "/student/notifications", "/student/complaints", "/student/complaints/new",
-    "/student/security", "/student/settings", "/student/profile",
+    "/student/security", "/student/settings", "/student/profile", "/student/search",
   ],
   teacher: [
     "/teacher", "/teacher/classes", "/teacher/attendance", "/teacher/attendance/ats_live_cs301",
@@ -166,6 +166,59 @@ check(
   blocked.status === 307 && (blocked.headers.get("location") ?? "").endsWith("/student"),
   `${blocked.status} → ${blocked.headers.get("location")}`,
 );
+
+// Public card verification (what the QR on the student ID opens).
+const card = await req("/verify/AM20261042", { cookie: jar() });
+const cardHtml = card.status === 200 ? await card.text() : "";
+check(
+  "public card verification renders for a real student",
+  card.status === 200 && cardHtml.includes("محمود") && cardHtml.includes("AM20261042"),
+  `status ${card.status}`,
+);
+check(
+  "public card verification hides sensitive data",
+  card.status === 200 && !cardHtml.includes("gpa") && !cardHtml.includes("nationalId") && !cardHtml.includes("phone"),
+  "",
+);
+const ghost = await req("/verify/NOPE-0000", { cookie: jar() });
+check("unknown card is reported, not crashed", ghost.status === 200, `status ${ghost.status}`);
+
+// SEO / PWA surface.
+const sitemap = await req("/sitemap.xml", { cookie: jar() });
+check("sitemap lists public pages", sitemap.status === 200 && (await sitemap.text()).includes("/docs/"), `status ${sitemap.status}`);
+const robots = await req("/robots.txt", { cookie: jar() });
+const robotsTxt = robots.status === 200 ? await robots.text() : "";
+check(
+  "robots keeps portals out of search engines",
+  robots.status === 200 && robotsTxt.includes("Disallow: /admin") && robotsTxt.includes("Sitemap:"),
+  `status ${robots.status}`,
+);
+const manifest = await req("/manifest.webmanifest", { cookie: jar() });
+check("web app manifest is served", manifest.status === 200 && (await manifest.text()).includes("icon-512.png"), `status ${manifest.status}`);
+
+// Global ⌘K search must respect role scoping on the server.
+if (sessions.admin && sessions.student) {
+  const adminQ = await req("/api/v1/search?q=AM20261042", { cookie: sessions.admin });
+  const adminBody = await adminQ.json().catch(() => ({}));
+  const adminKinds = (adminBody.groups ?? []).flatMap((g) => g.items.map((i) => i.kind));
+  check(
+    "search: staff find a student by number",
+    adminQ.status === 200 && adminKinds.includes("student"),
+    `kinds ${[...new Set(adminKinds)].join(",") || "none"}`,
+  );
+
+  const studentQ = await req("/api/v1/search?q=AM20261042", { cookie: sessions.student });
+  const studentBody = await studentQ.json().catch(() => ({}));
+  const studentKinds = (studentBody.groups ?? []).flatMap((g) => g.items.map((i) => i.kind));
+  check(
+    "search: a student cannot list other students",
+    studentQ.status === 200 && !studentKinds.includes("student") && !studentKinds.includes("teacher"),
+    `kinds ${[...new Set(studentKinds)].join(",") || "none"}`,
+  );
+
+  const anonQ = await req("/api/v1/search?q=AM20261042", { cookie: jar() });
+  check("search: anonymous request is rejected", anonQ.status === 401, `status ${anonQ.status}`);
+}
 
 for (const [role, routes] of Object.entries(ROUTES)) {
   const cookie = role === "public" ? jar() : sessions[role === "root" ? "root" : role];

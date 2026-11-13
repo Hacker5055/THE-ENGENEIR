@@ -25,6 +25,23 @@ export const metadata: Metadata = {
     icon: [{ url: "/brand/icon.svg", type: "image/svg+xml" }],
     apple: [{ url: "/brand/icon-192.png" }],
   },
+  manifest: "/manifest.webmanifest",
+  openGraph: {
+    type: "website",
+    siteName: "AL MOHANDES · المهندس",
+    title: "المهندس | AL MOHANDES — إدارة تعليمية ذكية واختبارات آمنة",
+    description:
+      "حضور موثّق، جداول ومقررات، درجات وتقارير، ومحرّك اختبارات مرجعيته الخادم — في منصة واحدة ثنائية اللغة.",
+    locale: "ar_SA",
+    alternateLocale: ["en_US"],
+    images: [{ url: "/brand/logo-sheet.png", width: 1520, height: 600, alt: "AL MOHANDES" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "المهندس | AL MOHANDES",
+    description: "منصة إدارة تعليمية واختبارات آمنة — عربي أولاً وثنائية اللغة.",
+    images: ["/brand/logo-sheet.png"],
+  },
 };
 
 export const viewport: Viewport = {

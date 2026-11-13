@@ -49,6 +49,11 @@ export default async function StudentDashboard() {
         avatarName={student.nameAr}
         avatarHue={student.avatarHue}
         avatarHref="/student/profile"
+        right={
+          <Link href="/student/search" className="grid size-9 place-items-center rounded-lg border border-line text-fg-muted transition hover:text-fg" aria-label={l("بحث", "Search")}>
+            <Icon name="search" size={16} />
+          </Link>
+        }
       />
 
       <div className="space-y-4 px-4 pt-4">
