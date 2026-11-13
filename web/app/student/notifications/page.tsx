@@ -3,7 +3,7 @@ import { Badge, Button, Icon, type IconName } from "@/components/ui";
 import { MobileAppBar } from "@/components/shells/mobile-shell";
 import { db } from "@/lib/server/store";
 import { studentContext } from "@/lib/server/context";
-import { markNotificationsRead } from "@/app/actions/student";
+import { markNotificationRead, markNotificationsRead } from "@/app/actions/student";
 import { makeL, relTime } from "@/lib/utils";
 
 export const metadata = { title: "الإشعارات" };
@@ -65,9 +65,8 @@ export default async function NotificationsPage({ searchParams }: { searchParams
 
         <div className="space-y-1.5">
           {list.map((n) => (
-            <Link
+            <div
               key={n.id}
-              href={n.href ?? "#"}
               className={"flex items-start gap-2.5 rounded-xl border p-3 transition " + (n.read ? "border-line bg-surface" : "border-brand/25 bg-brand/[0.06]")}
             >
               <span className={"mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg " + (n.read ? "bg-surface-2 text-fg-muted" : "bg-brand/15 text-accent-400")}>
@@ -82,9 +81,27 @@ export default async function NotificationsPage({ searchParams }: { searchParams
                 <div className="mt-1 flex items-center gap-2">
                   <span className="text-[9px] text-fg-muted/80">{relTime(n.createdAt, locale)}</span>
                   {n.priority === "HIGH" && <Badge tone="danger">{l("مهم", "Important")}</Badge>}
+                  {n.href && (
+                    <Link href={n.href} className="text-[9.5px] font-medium text-accent-400 hover:underline">
+                      {l("فتح", "Open")} ←
+                    </Link>
+                  )}
                 </div>
               </div>
-            </Link>
+              {!n.read && (
+                <form action={markNotificationRead} className="shrink-0">
+                  <input type="hidden" name="id" value={n.id} />
+                  <button
+                    type="submit"
+                    className="grid size-7 place-items-center rounded-lg border border-line-strong bg-surface text-fg-muted transition hover:text-fg"
+                    aria-label={l("تحديد كمقروء", "Mark as read")}
+                    title={l("تحديد كمقروء", "Mark as read")}
+                  >
+                    <Icon name="check" size={12} />
+                  </button>
+                </form>
+              )}
+            </div>
           ))}
         </div>
 

@@ -228,6 +228,13 @@ export interface Database {
   users: (SessionUser & { passwordHash: string })[];
   lectureNotes: LectureNote[];
   settings: InstitutionSettings;
+  studentPrefs: Record<string, StudentNotificationPrefs>;
+}
+
+export interface StudentNotificationPrefs {
+  categories: Record<string, boolean>;
+  quietHours: boolean;
+  updatedAt: number;
 }
 
 export interface InstitutionSettings {
@@ -1549,6 +1556,7 @@ export function buildSeed(): Database {
     roles,
     users,
     lectureNotes,
+    studentPrefs: {},
     settings: {
       nameAr: "جامعة المهندس للهندسة والتكنولوجيا",
       nameEn: "Al Mohandes University of Engineering & Technology",

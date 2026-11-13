@@ -2,6 +2,7 @@ import { Button, Icon } from "@/components/ui";
 import { MobileAppBar } from "@/components/shells/mobile-shell";
 import { SettingsPanel } from "@/components/student/settings-panel";
 import { logoutAction } from "@/app/actions/auth";
+import { db } from "@/lib/server/store";
 import { studentContext } from "@/lib/server/context";
 import { makeL } from "@/lib/utils";
 
@@ -10,12 +11,13 @@ export const metadata = { title: "الإعدادات" };
 export default async function SettingsPage() {
   const { student, locale, unread } = await studentContext();
   const l = makeL(locale);
+  const savedPrefs = db().studentPrefs[student.id];
 
   return (
     <div className="pb-6">
       <MobileAppBar back={{ href: "/student" }} title={l("الإعدادات", "Settings")} subtitle={`${student.nameAr} · ${student.studentNumber}`} unread={unread} />
       <div className="px-4 pt-4">
-        <SettingsPanel />
+        <SettingsPanel initial={savedPrefs} />
         <form action={logoutAction} className="mt-4">
           <Button type="submit" variant="outline" size="lg" icon="logout" className="w-full text-danger-500">
             {l("تسجيل الخروج", "Sign out")}

@@ -4,7 +4,7 @@ import { Alert, Badge, Icon } from "@/components/ui";
 import { MobileAppBar } from "@/components/shells/mobile-shell";
 import { DeviceCheck } from "@/components/student/device-check";
 import { LiveCountdown } from "@/components/live-countdown";
-import { startExamAction } from "@/app/actions/exam";
+import { resumeExamAction, startExamAction } from "@/app/actions/exam";
 import { db, findAttemptFor, findCourse, findExam, findTeacher } from "@/lib/server/store";
 import { studentContext } from "@/lib/server/context";
 import { fmtDateTime, makeL } from "@/lib/utils";
@@ -120,9 +120,12 @@ export default async function ExamLobbyPage({
             <p className="mt-1 text-[10.5px] text-fg-muted">
               {l("المؤقت يعمل على الخادم. العودة للاختبار تستأنف من حيث توقفت.", "The timer runs server-side. Resuming continues where you left off.")}
             </p>
-            <Link href={`/exam/${attempt.id}`} className="mt-2.5 flex h-9 items-center justify-center gap-1.5 rounded-lg bg-brand text-[12px] font-semibold text-white">
-              <Icon name="play" size={13} /> {l("استئناف الاختبار", "Resume exam")}
-            </Link>
+            <form action={resumeExamAction} className="mt-2.5">
+              <input type="hidden" name="attemptId" value={attempt.id} />
+              <button type="submit" className="flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-brand text-[12px] font-semibold text-white">
+                <Icon name="play" size={13} /> {l("استئناف الاختبار", "Resume exam")}
+              </button>
+            </form>
           </section>
         )}
 

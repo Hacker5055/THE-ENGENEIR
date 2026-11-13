@@ -3,7 +3,7 @@
    ----------------------------------------------------------------------------
    The prototype runs against an in-process store. It is deliberately shaped
    like a repository layer so that each accessor can be swapped for a
-   PostgreSQL query (see /db/schema.sql + /docs/12-backend-architecture.md).
+   PostgreSQL query (see /db/schema.sql + /docs/07-backend-architecture.md).
    Persistence is process-lifetime only — the UI never pretends otherwise.
    ========================================================================== */
 

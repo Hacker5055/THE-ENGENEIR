@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Badge, Card, CardHeader, Icon, Segmented, Switch } from "@/components/ui";
 import { usePrefs, useToast } from "@/components/providers";
+import { updateStudentPrefs } from "@/app/actions/student";
 import type { Locale, Theme } from "@/lib/types";
 
 const CATEGORIES = [
@@ -16,20 +17,37 @@ const CATEGORIES = [
   { key: "COMPLAINT", ar: "ردود الطلبات", en: "Request replies" },
 ];
 
-export function SettingsPanel() {
+export function SettingsPanel({
+  initial,
+}: {
+  initial?: { categories?: Record<string, boolean>; quietHours?: boolean; updatedAt?: number };
+}) {
   const { locale, theme, setLocale, setTheme, l } = usePrefs();
   const { toast } = useToast();
-  const [prefs, setPrefs] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(CATEGORIES.map((c) => [c.key, true])),
-  );
-  const [quiet, setQuiet] = useState(false);
+  const [prefs, setPrefs] = useState<Record<string, boolean>>(() => ({
+    ...Object.fromEntries(CATEGORIES.map((c) => [c.key, true])),
+    ...(initial?.categories ?? {}),
+  }));
+  const [quiet, setQuiet] = useState(Boolean(initial?.quietHours));
+  const [saving, startSaving] = useTransition();
+
+  const save = (nextPrefs: Record<string, boolean>, nextQuiet: boolean) => {
+    startSaving(async () => {
+      const res = await updateStudentPrefs({ categories: nextPrefs, quietHours: nextQuiet });
+      if (!res.ok) {
+        toast({ title: l("تعذّر الحفظ", "Could not save"), tone: "error" });
+      }
+    });
+  };
 
   const toggle = (key: string, value: boolean) => {
-    setPrefs((p) => ({ ...p, [key]: value }));
+    const next = { ...prefs, [key]: value };
+    setPrefs(next);
+    save(next, quiet);
     toast({
       title: value ? l("تم تفعيل التنبيه", "Alert enabled") : l("تم إيقاف التنبيه", "Alert disabled"),
-      description: l("تُحفظ التفضيلات على الخادم في النسخة الإنتاجية.", "Preferences persist server-side in production."),
-      tone: "info",
+      description: l("محفوظ على الخادم — يطبَّق على الإشعارات القادمة.", "Saved on the server — applies to future notifications."),
+      tone: "success",
     });
   };
 
@@ -66,7 +84,17 @@ export function SettingsPanel() {
       </Card>
 
       <Card>
-        <CardHeader title={l("تفضيلات الإشعارات", "Notification preferences")} icon="bell" subtitle={l("تتحكم في ما يصلك عبر التطبيق", "Controls what reaches you in-app")} />
+        <CardHeader
+          title={l("تفضيلات الإشعارات", "Notification preferences")}
+          icon="bell"
+          subtitle={
+            saving
+              ? l("جارٍ الحفظ على الخادم…", "Saving to the server…")
+              : initial?.updatedAt
+                ? `${l("محفوظة", "Saved")} · ${new Date(initial.updatedAt).toLocaleTimeString(locale === "ar" ? "ar-EG" : "en-GB", { hour: "2-digit", minute: "2-digit" })}`
+                : l("تتحكم في ما يصلك عبر التطبيق", "Controls what reaches you in-app")
+          }
+        />
         <div className="space-y-3.5">
           {CATEGORIES.map((c) => (
             <Switch key={c.key} checked={prefs[c.key]} onChange={(v) => toggle(c.key, v)} label={l(c.ar, c.en)} />
@@ -76,7 +104,8 @@ export function SettingsPanel() {
               checked={quiet}
               onChange={(v) => {
                 setQuiet(v);
-                toast({ title: v ? l("تم تفعيل الساعات الهادئة", "Quiet hours on") : l("تم إيقاف الساعات الهادئة", "Quiet hours off"), tone: "info" });
+                save(prefs, v);
+                toast({ title: v ? l("تم تفعيل الساعات الهادئة", "Quiet hours on") : l("تم إيقاف الساعات الهادئة", "Quiet hours off"), tone: "success" });
               }}
               label={l("ساعات هادئة (22:00 – 07:00)", "Quiet hours (22:00 – 07:00)")}
               description={l("تُؤجَّل الإشعارات غير العاجلة إلى الصباح.", "Non-urgent notifications are deferred to the morning.")}

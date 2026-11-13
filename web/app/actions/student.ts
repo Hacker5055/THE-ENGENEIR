@@ -151,18 +151,35 @@ export async function changePassword(formData: FormData) {
   redirect("/student/security?password=queued");
 }
 
-export async function updateStudentPrefs(formData: FormData) {
-  await requireRole(["STUDENT"]);
-  const courseId = String(formData.get("courseId") ?? "");
-  const course = findCourse(courseId);
+export async function updateStudentPrefs(payload: {
+  categories: Record<string, boolean>;
+  quietHours: boolean;
+}): Promise<{ ok: boolean }> {
+  const user = await requireRole(["STUDENT"]);
+  const studentId = user.studentId ?? "";
+  if (!studentId) return { ok: false };
+
+  const categories: Record<string, boolean> = {};
+  for (const [key, value] of Object.entries(payload.categories ?? {})) {
+    if (/^[A-Z_]{3,24}$/.test(key)) categories[key] = Boolean(value);
+  }
+
+  db().studentPrefs[studentId] = {
+    categories,
+    quietHours: Boolean(payload.quietHours),
+    updatedAt: Date.now(),
+  };
+
   pushAudit({
-    actorId: "stu",
-    actorName: "طالب",
+    actorId: user.id,
+    actorName: user.nameAr,
     actorRole: "STUDENT",
     action: "prefs.update",
     actionAr: "تحديث تفضيلات الإشعارات",
-    target: course ? course.code : "عام",
+    target: `student:${studentId}`,
     severity: "INFO",
   });
   revalidatePath("/student/settings");
+  revalidatePath("/student/notifications");
+  return { ok: true };
 }
