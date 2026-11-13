@@ -27,13 +27,30 @@
 
 ## التشغيل
 
+المستودع كامل يُثبَّت ويُشغَّل **من الجذر** — لا حاجة للدخول إلى `web/`:
+
 ```bash
-cd web
-npm install
-npm run dev          # http://localhost:3000
-npx tsc --noEmit     # فحص الأنواع
+npm install          # يثبّت مساحة العمل web/ (npm workspaces)
+npm run dev          # http://localhost:3000  (يستمع على 0.0.0.0 للعرض داخل حاويات/معاينات)
 npm run build        # بناء الإنتاج
+npm run start        # تشغيل الإنتاج
+npm run typecheck    # فحص الأنواع
+npm run smoke        # اختبار E2E شامل (27 فحصاً) — يحتاج خادماً يعمل على :3000
 ```
+
+المتطلبات: **Node ≥ 20.9** و npm ≥ 10. لا توجد أي اعتمادية أصلية (native) مطلوبة للتشغيل؛ أدوات توليد شعارات العلامة التجارية وحدها تحتاج حزمتين اختياريتين:
+
+```bash
+npm i -D @resvg/resvg-js fontkit     # فقط لإعادة توليد brand/*.png
+```
+
+### التشغيل على منصات الاستضافة الآلية (Google AI Studio / StackBlitz / CodeSandbox)
+
+هذا التطبيق **Next.js بخادم Node** (Server Actions، Middleware، تصيير على الخادم) وليس تطبيق Vite ثابتاً. لذلك:
+
+- ملف `package.json` موجود الآن في **جذر المستودع** مع `web` كمساحة عمل، وملف قفل واحد `package-lock.json` في الجذر — هذا ما كان يمنع التثبيت سابقاً («Dependency installation failed») عند استيراد المستودع كاملاً، لأن الجذر لم يكن يحمل بياناً.
+- أي منصة تشغّل أمر `npm run dev` على Node ستعمل مباشرة؛ الخادم يستمع على `0.0.0.0:3000`.
+- منصة تقبل **Vite فقط** لن تشغّل هذا المشروع كما هو — استخدم معاينة Node (هذه البيئة) أو Vercel/أي مستضيف Node.
 
 ## الحسابات التجريبية
 

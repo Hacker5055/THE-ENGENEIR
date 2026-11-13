@@ -1,0 +1,20 @@
+{
+  "name": "al-mohandes",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AL MOHANDES / المهندس — bilingual education management & secure examination platform",
+  "workspaces": [
+    "web"
+  ],
+  "scripts": {
+    "dev": "npm --workspace web run dev",
+    "build": "npm --workspace web run build",
+    "start": "npm --workspace web run start",
+    "typecheck": "npm --workspace web run typecheck",
+    "smoke": "node scripts/smoke.mjs",
+    "docs:export": "npm --workspace web run docs:export"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  }
+}
