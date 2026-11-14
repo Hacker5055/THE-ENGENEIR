@@ -3,6 +3,7 @@ import { Avatar, Badge, Icon, Progress } from "@/components/ui";
 import { MobileAppBar } from "@/components/shells/mobile-shell";
 import { db, findTeacher, gpaFor, studentAttendance } from "@/lib/server/store";
 import { studentContext } from "@/lib/server/context";
+import { UserWorkspacePanel } from "@/components/firebase/user-workspace-panel";
 import { fmtDate, makeL } from "@/lib/utils";
 
 export const metadata = { title: "الملف الشخصي" };
@@ -52,7 +53,7 @@ export default async function StudentProfilePage() {
           <p className="mb-2 text-[11px] font-semibold text-fg">{l("البيانات الأكاديمية", "Academic record")}</p>
           <dl className="space-y-1.5 text-[10.5px]">
             {[
-              [l("المؤسسة", "Institution"), l("منصة مستر زياد الشافعي", "ZIAD EL-SHAFEI Academy")],
+              [l("المؤسسة", "Institution"), l("أكاديمية المهندس للهندسة والتكنولوجيا", "AL MOHANDES Academy")],
               [l("القسم", "Department"), l(department.nameAr, department.nameEn)],
               [l("الشعبة", "Section"), sectionName],
               [l("المرشد الأكاديمي", "Academic advisor"), advisor?.nameAr ?? "—"],
@@ -119,6 +120,8 @@ export default async function StudentProfilePage() {
             </Link>
           ))}
         </div>
+
+        <UserWorkspacePanel />
 
         <p className="text-center text-[9.5px] text-fg-muted">
           {l("آخر تحديث للبيانات", "Data last synced")}: {new Date().toLocaleString("en-GB", { hour: "2-digit", minute: "2-digit" })}

@@ -1,40 +1,38 @@
 @import "tailwindcss";
 
 /* ============================================================================
-   ZIAD EL-SHAFEI — Design Tokens
-   AMOLED black (true #000) with an emerald accent. Single source of truth for
-   colour, type, spacing, radius, elevation and motion.
+   AL MOHANDES — Design Tokens
+   Single source of truth for colour, type, spacing, radius, elevation & motion.
    ========================================================================== */
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   /* ---- Brand palette --------------------------------------------------- */
-  /* true-black surfaces for AMOLED panels */
-  --color-navy-950: #000000;
-  --color-navy-900: #050708;
-  --color-navy-850: #080b0d;
-  --color-navy-800: #0b0f11;
-  --color-navy-700: #101619;
-  --color-navy-600: #161d21;
-  --color-navy-500: #1e272c;
+  --color-navy-950: #0a1220;
+  --color-navy-900: #101b2d;
+  --color-navy-850: #152338;
+  --color-navy-800: #192b45;
+  --color-navy-700: #22334d;
+  --color-navy-600: #2c4060;
+  --color-navy-500: #3a5279;
 
-  --color-brand-50: #e8fbf3;
-  --color-brand-100: #c9f6e3;
-  --color-brand-200: #93ecc7;
-  --color-brand-300: #57dcaa;
-  --color-brand-400: #2ecb92;
-  --color-brand-500: #10b981;
-  --color-brand-600: #0a9a6b;
-  --color-brand-700: #0a7a57;
-  --color-brand-800: #0b5f46;
-  --color-brand-900: #0a4d3a;
+  --color-brand-50: #eaf1fd;
+  --color-brand-100: #d3e2fb;
+  --color-brand-200: #a9c5f6;
+  --color-brand-300: #7aa4ef;
+  --color-brand-400: #4d82e6;
+  --color-brand-500: #2864d9;
+  --color-brand-600: #1f52b8;
+  --color-brand-700: #194191;
+  --color-brand-800: #14336f;
+  --color-brand-900: #0f2650;
 
-  --color-accent-100: #e6fdf6;
-  --color-accent-300: #7cf0c8;
-  --color-accent-400: #34d399;
-  --color-accent-500: #10b981;
-  --color-accent-600: #059669;
+  --color-accent-100: #dbefff;
+  --color-accent-300: #86c9ff;
+  --color-accent-400: #5eb6ff;
+  --color-accent-500: #38a5ff;
+  --color-accent-600: #1a86e0;
 
   --color-success-100: #d3f5ea;
   --color-success-500: #19b88a;
@@ -142,21 +140,21 @@
    ========================================================================== */
 :root,
 html.dark {
-  --am-bg: #000000;
-  --am-bg-elevated: #050708;
-  --am-surface: #0a0e10;
-  --am-surface-2: #101619;
-  --am-surface-3: #161d21;
-  --am-line: rgba(255, 255, 255, 0.07);
-  --am-line-strong: rgba(255, 255, 255, 0.14);
-  --am-fg: #eefaf4;
-  --am-fg-soft: #bcd2c9;
-  --am-fg-muted: #7f958c;
-  --am-fg-inverse: #000000;
-  --am-brand: #10b981;
-  --am-brand-soft: rgba(16, 185, 129, 0.16);
-  --am-focus: #34d399;
-  --am-grid: rgba(16, 185, 129, 0.055);
+  --am-bg: #101b2d;
+  --am-bg-elevated: #142338;
+  --am-surface: #192b45;
+  --am-surface-2: #22334d;
+  --am-surface-3: #2a3d59;
+  --am-line: rgba(255, 255, 255, 0.08);
+  --am-line-strong: rgba(255, 255, 255, 0.16);
+  --am-fg: #eef3fa;
+  --am-fg-soft: #c8d4e5;
+  --am-fg-muted: #93a4bc;
+  --am-fg-inverse: #101b2d;
+  --am-brand: #2864d9;
+  --am-brand-soft: rgba(40, 100, 217, 0.16);
+  --am-focus: #5eb6ff;
+  --am-grid: rgba(255, 255, 255, 0.045);
   color-scheme: dark;
 }
 
@@ -172,9 +170,9 @@ html.light {
   --am-fg-soft: #33455f;
   --am-fg-muted: #5f6e83;
   --am-fg-inverse: #ffffff;
-  --am-brand: #0a9a6b;
-  --am-brand-soft: rgba(10, 154, 107, 0.10);
-  --am-focus: #0a7a57;
+  --am-brand: #2864d9;
+  --am-brand-soft: rgba(40, 100, 217, 0.09);
+  --am-focus: #1f52b8;
   --am-grid: rgba(23, 36, 58, 0.05);
   color-scheme: light;
 }

@@ -4,7 +4,7 @@ import { TEACHER_NAV } from "@/lib/nav";
 import { teacherContext } from "@/lib/server/context";
 import { db } from "@/lib/server/store";
 
-export const metadata: Metadata = { title: { default: "لوحة المعلم", template: "%s · زياد الشافعي" } };
+export const metadata: Metadata = { title: { default: "لوحة المعلم", template: "%s · المهندس" } };
 
 export default async function TeacherLayout({ children }: { children: React.ReactNode }) {
   const { user, unread, courses } = await teacherContext();

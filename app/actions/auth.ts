@@ -23,29 +23,17 @@ export async function loginAction(_prev: LoginState, formData: FormData): Promis
 
   const result = await startSignIn(email, password);
   if (!result.ok) {
-    return {
-      error:
-        result.error === "RATE_LIMITED"
-          ? "محاولات دخول كثيرة من هذا الجهاز. حاول بعد بضع دقائق أو استخدم «نسيت كلمة المرور»."
-          : "بيانات الدخول غير صحيحة. تحقق من البريد وكلمة المرور.",
-      email,
-    };
+    return { error: "بيانات الدخول غير صحيحة. تحقق من البريد وكلمة المرور.", email };
   }
 
-  // No second factor required (no mail server configured): the session cookie
-  // is already set by startSignIn.
-  if (result.kind === "SESSION") {
-    const carry = next.startsWith("/") && !next.startsWith("//") ? `?next=${encodeURIComponent(next)}` : "";
-    redirect(`/welcome${carry}`);
-  }
-
+  const secure = await cookieSecure();
   const jar = await cookies();
   jar.set("am_pending", result.challengeId, {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: secure ? "none" : "lax",
     path: "/",
     maxAge: 300,
-    secure: await cookieSecure(),
+    secure,
   });
   // The challenge id also travels in the URL: some embedded/preview browsers
   // drop short-lived cookies between two navigations, and losing the id turned

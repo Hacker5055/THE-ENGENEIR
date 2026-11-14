@@ -5,18 +5,17 @@ import { LogoMark, Wordmark } from "@/components/brand/logo";
 import { Icon } from "@/components/icons";
 import { PrefToggles } from "@/components/pref-toggles";
 import { getSessionUser, HOME_FOR_ROLE } from "@/lib/server/auth";
-import { demoMode } from "@/lib/server/store";
 import { getPrefs } from "@/lib/prefs";
 import { tx } from "@/lib/utils";
 
 export const metadata = { title: "تسجيل الدخول" };
 
 const ROLE_EMAIL: Record<string, string> = {
-  student: "student@ziadelshafei.com",
-  teacher: "teacher@ziadelshafei.com",
-  admin: "admin@ziadelshafei.com",
-  supervisor: "supervisor@ziadelshafei.com",
-  root: "root@ziadelshafei.com",
+  student: "student@almohandes.edu",
+  teacher: "teacher@almohandes.edu",
+  admin: "admin@almohandes.edu",
+  supervisor: "supervisor@almohandes.edu",
+  root: "root@almohandes.edu",
 };
 
 export default async function LoginPage({
@@ -28,7 +27,6 @@ export default async function LoginPage({
   if (user) redirect(HOME_FOR_ROLE[user.role]);
   const { locale } = await getPrefs();
   const { role, expired, next } = await searchParams;
-  const demo = demoMode();
 
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1.05fr_1fr]">
@@ -49,7 +47,7 @@ export default async function LoginPage({
 
         <div className="relative max-w-md">
           <h2 className="text-[30px] font-semibold leading-tight text-white">
-            {tx(locale, "البرمجة وعلوم الحاسب — من أول كود لأول مشروع.", "Programming & Computer Science — from the first line of code to the first project.")}
+            {tx(locale, "منظومة واحدة لكل ما يحدث داخل المؤسسة التعليمية.", "One system for everything inside the institution.")}
           </h2>
           <p className="mt-4 text-[13.5px] leading-relaxed text-white/55">
             {tx(
@@ -105,11 +103,7 @@ export default async function LoginPage({
               </span>
             </div>
           )}
-          <LoginForm
-            initialEmail={demo && role ? ROLE_EMAIL[role] : undefined}
-            next={next}
-            demo={demo}
-          />
+          <LoginForm initialEmail={role ? ROLE_EMAIL[role] : undefined} next={next} />
           {/* No-JS / failed-hydration fallback: a plain HTML form posting to a
               route handler, so sign-in never depends on the client bundle. */}
           <noscript>
@@ -124,10 +118,7 @@ export default async function LoginPage({
           </noscript>
         </div>
         <div className="border-t border-line px-5 py-3 text-center text-[10.5px] text-fg-muted">
-          © 2026 ZIAD EL-SHAFEI ·{" "}
-          {demo
-            ? tx(locale, "بيئة تدريب — بيانات تجريبية", "Training environment — demo data")
-            : tx(locale, "منصة زياد الشافعي — نسخة الإنتاج", "Al Mohandes Platform")}
+          © 2026 AL MOHANDES · {tx(locale, "نموذج أولي وظيفي — بيانات تجريبية", "Functional prototype — demo data")}
         </div>
       </main>
     </div>

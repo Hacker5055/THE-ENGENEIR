@@ -14,7 +14,7 @@ export default async function DocsIndexPage() {
     <main className="container-app py-10">
       <div className="max-w-2xl">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent-500">{l("حزمة التسليم", "Delivery pack")}</p>
-        <h1 className="mt-2 text-[28px] font-semibold leading-tight text-fg">{l("مستندات منصة زياد الشافعي", "Al Mohandes platform documentation")}</h1>
+        <h1 className="mt-2 text-[28px] font-semibold leading-tight text-fg">{l("مستندات منصة المهندس", "Al Mohandes platform documentation")}</h1>
         <p className="mt-2 text-[13px] leading-relaxed text-fg-muted">
           {l(
             "أحد عشر مستنداً يغطي المنتج، هندسة المعلومات، الرحلات، الهوية، نظام التصميم، قاعدة البيانات، المعمارية، الـAPI، الأمان، الخطة، والاختبار. كلها تُقرأ داخل المنصة، وتُطابق ما هو مبني فعلياً.",

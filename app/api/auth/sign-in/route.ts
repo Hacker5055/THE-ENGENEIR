@@ -34,21 +34,16 @@ export async function POST(req: Request) {
 
   const result = await startSignIn(email, password);
   if (!result.ok) {
-    const code = result.error === "RATE_LIMITED" ? "rate" : "credentials";
-    return NextResponse.redirect(new URL(`/login?expired=0&error=${code}`, origin), 303);
+    return NextResponse.redirect(new URL("/login?expired=0&error=credentials", origin), 303);
   }
 
-  if (result.kind === "SESSION") {
-    const carry = next.startsWith("/") && !next.startsWith("//") ? `?next=${encodeURIComponent(next)}` : "";
-    return NextResponse.redirect(new URL(`/welcome${carry}`, origin), 303);
-  }
-
+  const secure = await cookieSecure();
   (await cookies()).set("am_pending", result.challengeId, {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: secure ? "none" : "lax",
     path: "/",
     maxAge: 300,
-    secure: await cookieSecure(),
+    secure,
   });
 
   const carry = next.startsWith("/") && !next.startsWith("//") ? `&next=${encodeURIComponent(next)}` : "";

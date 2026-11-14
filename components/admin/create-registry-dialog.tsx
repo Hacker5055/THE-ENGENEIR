@@ -181,8 +181,8 @@ export function CreateTeacherButton({ departments, courses }: { departments: Dep
                   ))}
                 </Select>
               </Field>
-              <Field label={l("البريد المؤسسي", "Institutional e-mail")} required hint="@ziadelshafei.com">
-                <Input name="email" type="email" required dir="ltr" placeholder="heba.kamal@ziadelshafei.com" />
+              <Field label={l("البريد المؤسسي", "Institutional e-mail")} required hint="@almohandes.edu">
+                <Input name="email" type="email" required dir="ltr" placeholder="heba.kamal@almohandes.edu" />
               </Field>
             </div>
 

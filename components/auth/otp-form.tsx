@@ -18,8 +18,7 @@ export function OtpForm({
   next,
 }: {
   challengeId: string;
-  /** Present only in demo mode where the code is shown on screen. */
-  demoCode?: string;
+  demoCode: string;
   email: string;
   name: string;
   expiresInMs: number;
@@ -30,7 +29,7 @@ export function OtpForm({
   const [state, action] = useActionState<LoginState, FormData>(verifyAction, {});
   const [digits, setDigits] = useState<string[]>(["", "", "", "", "", ""]);
   const [remaining, setRemaining] = useState(expiresInMs);
-  const [code, setCode] = useState(demoCode ?? "");
+  const [code, setCode] = useState(demoCode);
   const [resending, setResending] = useState(false);
   const refs = useRef<(HTMLInputElement | null)[]>([]);
   const formRef = useRef<HTMLFormElement>(null);
@@ -65,7 +64,7 @@ export function OtpForm({
   };
 
   const fillDemo = () => {
-    setDigits((demoCode ?? "").split(""));
+    setDigits(demoCode.split(""));
     refs.current[5]?.focus();
   };
 
@@ -163,7 +162,6 @@ export function OtpForm({
 
         <SubmitBtn disabled={remaining <= 0} />
 
-        {demoCode && (
         <div className="mt-5 rounded-xl border border-dashed border-warn-500/40 bg-warn-500/[0.06] p-3">
           <div className="flex items-start justify-between gap-2">
             <div>
@@ -182,7 +180,6 @@ export function OtpForm({
             </Button>
           </div>
         </div>
-        )}
       </form>
 
       <div className="mt-5 flex items-center justify-center gap-3 text-[11px]">

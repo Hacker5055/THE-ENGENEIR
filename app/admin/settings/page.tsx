@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/shells/app-shell";
 import { db } from "@/lib/server/store";
 import { adminContext } from "@/lib/server/context";
 import { saveInstitutionSettings } from "@/app/actions/admin";
+import { UserWorkspacePanel } from "@/components/firebase/user-workspace-panel";
 import { makeL } from "@/lib/utils";
 
 export const metadata = { title: "إعدادات المؤسسة" };
@@ -174,6 +175,8 @@ export default async function AdminSettingsPage({ searchParams }: { searchParams
           </Card>
         </div>
       </form>
+
+      <UserWorkspacePanel />
     </div>
   );
 }

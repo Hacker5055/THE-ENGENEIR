@@ -1,0 +1,210 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Global Safety Net (Default-Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Hardened Global Helpers
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isVerified() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isVerified() && (
+        request.auth.token.email == 'mz0970mmz@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // 3. Entity Validation Blueprints
+    function isValidPublicProfile(data, userId) {
+      return data.keys().hasAll(['uid', 'displayName', 'photoURL', 'role', 'institutionId', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'displayName', 'photoURL', 'role', 'institutionId', 'createdAt', 'updatedAt'])
+        && isValidId(data.uid)
+        && data.uid == userId
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 120
+        && data.photoURL is string && data.photoURL.size() <= 500
+        && data.role is string && data.role in ['STUDENT', 'TEACHER', 'EXAM_SUPERVISOR', 'INSTITUTION_ADMIN', 'SUPER_ADMIN']
+        && data.institutionId is string && data.institutionId.size() >= 1 && data.institutionId.size() <= 64 && data.institutionId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidPrivateInfo(data, userId) {
+      return data.keys().hasAll(['uid', 'email', 'emailVerified', 'authProvider', 'locale', 'theme', 'loginCount', 'lastLoginAt', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'email', 'emailVerified', 'authProvider', 'locale', 'theme', 'loginCount', 'lastLoginAt', 'createdAt', 'updatedAt'])
+        && isValidId(data.uid)
+        && data.uid == userId
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 254
+        && data.emailVerified is bool
+        && data.authProvider is string && data.authProvider in ['google.com']
+        && data.locale is string && data.locale in ['ar', 'en']
+        && data.theme is string && data.theme in ['dark', 'light']
+        && data.loginCount is number && data.loginCount >= 1 && data.loginCount <= 1000000
+        && data.lastLoginAt is timestamp
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidActivity(data, userId) {
+      return data.keys().hasAll(['uid', 'action', 'detail', 'portal', 'createdAt'])
+        && data.keys().hasOnly(['uid', 'action', 'detail', 'portal', 'createdAt'])
+        && isValidId(data.uid)
+        && data.uid == userId
+        && data.action is string && data.action.size() >= 1 && data.action.size() <= 64
+        && data.detail is string && data.detail.size() >= 1 && data.detail.size() <= 300
+        && data.portal is string && data.portal.size() >= 1 && data.portal.size() <= 64
+        && data.createdAt is timestamp;
+    }
+
+    function isValidNote(data, userId) {
+      return data.keys().hasAll(['uid', 'title', 'content', 'pinned', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'title', 'content', 'pinned', 'createdAt', 'updatedAt'])
+        && isValidId(data.uid)
+        && data.uid == userId
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 120
+        && data.content is string && data.content.size() >= 1 && data.content.size() <= 2000
+        && data.pinned is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidAdminRecord(data, userId) {
+      return data.keys().hasAll(['uid', 'email', 'grantedBy', 'createdAt'])
+        && data.keys().hasOnly(['uid', 'email', 'grantedBy', 'createdAt'])
+        && isValidId(data.uid)
+        && data.uid == userId
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 254
+        && data.grantedBy is string && data.grantedBy.size() >= 1 && data.grantedBy.size() <= 128
+        && data.createdAt is timestamp;
+    }
+
+    // 4. Collection Rules
+
+    // Public profile (no PII)
+    match /users/{userId}/public/{docId} {
+      allow get: if isValidId(userId) && isValidId(docId) && docId == 'profile' && (isOwner(userId) || isAdmin());
+      allow list: if isValidId(userId) && isVerified() && (resource.data.uid == request.auth.uid || request.auth.token.email == 'mz0970mmz@gmail.com');
+      allow create: if isValidId(userId) && isValidId(docId) && docId == 'profile'
+        && isOwner(userId)
+        && isValidPublicProfile(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && (incoming().role == 'STUDENT' || isAdmin());
+      allow update: if isValidId(userId) && isValidId(docId) && docId == 'profile'
+        && (isOwner(userId) || isAdmin())
+        && isValidPublicProfile(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() ||
+          (
+            incoming().role == existing().role &&
+            incoming().institutionId == existing().institutionId &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'updatedAt'])
+          )
+        );
+      allow delete: if isValidId(userId) && isValidId(docId) && isAdmin();
+    }
+
+    // Private PII info (owner or admin only)
+    match /users/{userId}/private/{docId} {
+      allow get: if isValidId(userId) && isValidId(docId) && docId == 'info' && (isOwner(userId) || isAdmin());
+      allow list: if isValidId(userId) && isVerified() && (resource.data.uid == request.auth.uid || request.auth.token.email == 'mz0970mmz@gmail.com');
+      allow create: if isValidId(userId) && isValidId(docId) && docId == 'info'
+        && isOwner(userId)
+        && isValidPrivateInfo(incoming(), userId)
+        && incoming().email == request.auth.token.email
+        && incoming().emailVerified == request.auth.token.email_verified
+        && incoming().lastLoginAt == request.time
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId) && isValidId(docId) && docId == 'info'
+        && (isOwner(userId) || isAdmin())
+        && isValidPrivateInfo(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() ||
+          (
+            incoming().email == request.auth.token.email &&
+            incoming().emailVerified == request.auth.token.email_verified &&
+            incoming().authProvider == existing().authProvider &&
+            incoming().lastLoginAt == request.time &&
+            incoming().loginCount >= existing().loginCount &&
+            incoming().loginCount <= existing().loginCount + 1 &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['locale', 'theme', 'loginCount', 'lastLoginAt', 'updatedAt'])
+          )
+        );
+      allow delete: if isValidId(userId) && isValidId(docId) && isAdmin();
+    }
+
+    // Activity trail (append-only for owners)
+    match /users/{userId}/activity/{activityId} {
+      allow get: if isValidId(userId) && isValidId(activityId) && (isOwner(userId) || isAdmin());
+      allow list: if isValidId(userId) && isVerified() && (resource.data.uid == request.auth.uid || request.auth.token.email == 'mz0970mmz@gmail.com');
+      allow create: if isValidId(userId) && isValidId(activityId)
+        && isOwner(userId)
+        && isValidActivity(incoming(), userId)
+        && incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if isValidId(userId) && isValidId(activityId) && isAdmin();
+    }
+
+    // Personal notes (CRUD for verified owner)
+    match /users/{userId}/notes/{noteId} {
+      allow get: if isValidId(userId) && isValidId(noteId) && (isOwner(userId) || isAdmin());
+      allow list: if isValidId(userId) && isVerified() && (resource.data.uid == request.auth.uid || request.auth.token.email == 'mz0970mmz@gmail.com');
+      allow create: if isValidId(userId) && isValidId(noteId)
+        && isOwner(userId)
+        && isValidNote(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId) && isValidId(noteId)
+        && (isOwner(userId) || isAdmin())
+        && isValidNote(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() ||
+          incoming().diff(existing()).affectedKeys().hasOnly(['title', 'content', 'pinned', 'updatedAt'])
+        );
+      allow delete: if isValidId(userId) && isValidId(noteId) && (isOwner(userId) || isAdmin());
+    }
+
+    // Admin registry
+    match /admins/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isVerified() && request.auth.token.email == 'mz0970mmz@gmail.com';
+      allow create: if isValidId(userId) && isAdmin() && isValidAdminRecord(incoming(), userId) && incoming().createdAt == request.time;
+      allow update: if isValidId(userId) && isAdmin() && isValidAdminRecord(incoming(), userId) && incoming().uid == existing().uid && incoming().createdAt == existing().createdAt;
+      allow delete: if isValidId(userId) && isAdmin();
+    }
+  }
+}

@@ -35,10 +35,11 @@ export async function POST(req: Request) {
   const jar = await cookies();
   const token = jar.get("am_session")?.value;
   if (token) {
+    const secure = await cookieSecure();
     res.cookies.set("am_session", token, {
       httpOnly: true,
-      sameSite: "lax",
-      secure: await cookieSecure(),
+      sameSite: secure ? "none" : "lax",
+      secure,
       path: "/",
       maxAge: 8 * 60 * 60,
     });

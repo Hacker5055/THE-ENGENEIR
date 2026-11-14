@@ -8,20 +8,20 @@ import "@fontsource/ibm-plex-sans-arabic/500.css";
 import "@fontsource/ibm-plex-sans-arabic/600.css";
 import "@fontsource/ibm-plex-sans-arabic/700.css";
 import "./globals.css";
-import { PreferencesProvider, ToastProvider } from "@/components/providers";
+import { FirebaseProvider, PreferencesProvider, ToastProvider } from "@/components/providers";
 import { getPrefs } from "@/lib/prefs";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://ziadelshafei.com"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://almohandes.edu"),
   title: {
-    default: "زياد الشافعي — البرمجة وعلوم الحاسب | البكالوريا المصرية",
-    template: "%s · زياد الشافعي",
+    default: "المهندس | AL MOHANDES — إدارة تعليمية ذكية واختبارات آمنة",
+    template: "%s · المهندس",
   },
   description:
-    "منصة مستر زياد الشافعي لتدريس البرمجة وعلوم الحاسب للصفوف الثلاثة الثانوية — نظام البكالوريا المصرية: شرح، كتب الوزارة، اختبارات إلكترونية، وحضور موثّق.",
-  applicationName: "ZIAD EL-SHAFEI",
-  authors: [{ name: "Ziad El-Shafei" }],
-  keywords: ["البرمجة", "علوم الحاسب", "البكالوريا المصرية", "الصف الأول الثانوي", "الصف الثاني الثانوي", "الصف الثالث الثانوي", "programming", "computer science"],
+    "منظومة متكاملة لإدارة المؤسسات التعليمية: الحضور والانصراف، الجداول، الأداء الأكاديمي، واختبارات إلكترونية آمنة متعددة المؤسسات.",
+  applicationName: "AL MOHANDES",
+  authors: [{ name: "AL MOHANDES Product Team" }],
+  keywords: ["إدارة تعليمية", "اختبارات آمنة", "نظام حضور", "EMS", "education management"],
   icons: {
     icon: [{ url: "/brand/icon.svg", type: "image/svg+xml" }],
     apple: [{ url: "/brand/icon-192.png" }],
@@ -29,18 +29,18 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
   openGraph: {
     type: "website",
-    siteName: "ZIAD EL-SHAFEI · زياد الشافعي",
-    title: "زياد الشافعي — البرمجة وعلوم الحاسب | البكالوريا المصرية",
+    siteName: "AL MOHANDES · المهندس",
+    title: "المهندس | AL MOHANDES — إدارة تعليمية ذكية واختبارات آمنة",
     description:
-      "شرح المنهج، كتب وزارة التربية والتعليم، اختبارات إلكترونية، ومتابعة الحضور والدرجات لطلاب الثانوية العامة والبكالوريا.",
+      "حضور موثّق، جداول ومقررات، درجات وتقارير، ومحرّك اختبارات مرجعيته الخادم — في منصة واحدة ثنائية اللغة.",
     locale: "ar_SA",
     alternateLocale: ["en_US"],
-    images: [{ url: "/brand/logo-sheet.png", width: 1520, height: 600, alt: "ZIAD EL-SHAFEI" }],
+    images: [{ url: "/brand/logo-sheet.png", width: 1520, height: 600, alt: "AL MOHANDES" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "زياد الشافعي | ZIAD EL-SHAFEI",
-    description: "البرمجة وعلوم الحاسب مع مستر زياد الشافعي — البكالوريا المصرية.",
+    title: "المهندس | AL MOHANDES",
+    description: "منصة إدارة تعليمية واختبارات آمنة — عربي أولاً وثنائية اللغة.",
     images: ["/brand/logo-sheet.png"],
   },
 };
@@ -60,9 +60,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang={locale} dir={locale === "ar" ? "rtl" : "ltr"} className={theme} suppressHydrationWarning>
       <body className="min-h-dvh bg-bg text-fg antialiased">
-        <PreferencesProvider initialLocale={locale} initialTheme={theme}>
-          <ToastProvider>{children}</ToastProvider>
-        </PreferencesProvider>
+        <FirebaseProvider>
+          <PreferencesProvider initialLocale={locale} initialTheme={theme}>
+            <ToastProvider>{children}</ToastProvider>
+          </PreferencesProvider>
+        </FirebaseProvider>
       </body>
     </html>
   );

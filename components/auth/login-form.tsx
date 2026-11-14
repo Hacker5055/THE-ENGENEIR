@@ -4,36 +4,71 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { loginAction, type LoginState } from "@/app/actions/auth";
-import { requestResetAction, type ResetRequestState } from "@/app/actions/account";
 import { Button, Field, Input, Modal, Alert, Badge } from "@/components/ui";
 import { Icon } from "@/components/icons";
 import { usePrefs } from "@/components/providers";
+import { signInWithGooglePopup, syncSignedInUserToFirestore } from "@/lib/firebase";
 import { DEMO_CREDENTIALS } from "@/lib/demo-accounts";
+import type { Role } from "@/lib/types";
 import { cx } from "@/lib/utils";
 
 const ROLE_ORDER = ["STUDENT", "TEACHER", "INSTITUTION_ADMIN", "EXAM_SUPERVISOR", "SUPER_ADMIN"] as const;
 
-export function LoginForm({
-  initialEmail,
-  next,
-  demo = false,
-}: {
-  initialEmail?: string;
-  next?: string;
-  /** Demo accounts are a development/training aid, never shown in production. */
-  demo?: boolean;
-}) {
-  const { l } = usePrefs();
+export function LoginForm({ initialEmail, next }: { initialEmail?: string; next?: string }) {
+  const { l, locale, theme } = usePrefs();
   const [state, action] = useActionState<LoginState, FormData>(loginAction, {});
   const [email, setEmail] = useState(initialEmail ?? "");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [forgot, setForgot] = useState(false);
-  const [resetState, resetAction] = useActionState<ResetRequestState, FormData>(requestResetAction, {});
+  const [forgotSent, setForgotSent] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleError, setGoogleError] = useState<string | null>(null);
 
   const useDemo = (cred: (typeof DEMO_CREDENTIALS)[number]) => {
     setEmail(cred.email);
     setPassword(cred.password);
+  };
+
+  const handleGoogleSignIn = async () => {
+    setGoogleError(null);
+    setGoogleLoading(true);
+    try {
+      const { user, idToken } = await signInWithGooglePopup();
+      const res = await fetch("/api/auth/google", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ idToken, next }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        role?: Role;
+        redirectTo?: string;
+        error?: string;
+      };
+      if (!res.ok || !data.ok || !data.role) {
+        setGoogleError(
+          data.error === "UNVERIFIED_EMAIL"
+            ? l("يرجى توثيق بريد جوجل قبل المتابعة.", "Please verify your Google email before continuing.")
+            : l("تعذّر التحقق من جلسة جوجل على الخادم.", "Could not verify your Google session on the server."),
+        );
+        setGoogleLoading(false);
+        return;
+      }
+
+      await syncSignedInUserToFirestore(user, data.role, locale, theme);
+      window.location.assign(data.redirectTo || "/welcome");
+    } catch (err) {
+      const code = typeof err === "object" && err && "code" in err ? String((err as { code?: string }).code) : "";
+      if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
+        setGoogleError(l("تم إلغاء نافذة تسجيل الدخول بجوجل.", "Google sign-in popup was closed."));
+      } else if (code === "auth/popup-blocked") {
+        setGoogleError(l("المتصفح منع النافذة المنبثقة. اسمح بالنوافذ المنبثقة ثم أعد المحاولة.", "Browser blocked the popup. Allow popups and try again."));
+      } else {
+        setGoogleError(l("تعذّر تسجيل الدخول بحساب جوجل. حاول مرة أخرى.", "Google sign-in failed. Please try again."));
+      }
+      setGoogleLoading(false);
+    }
   };
 
   return (
@@ -42,15 +77,36 @@ export function LoginForm({
         <div className="mb-6">
           <h1 className="text-[22px] font-semibold tracking-tight text-fg">{l("تسجيل الدخول", "Sign in")}</h1>
           <p className="mt-1.5 text-[13px] leading-relaxed text-fg-muted">
-            {l("استخدم بريدك المؤسسي. سيُطلب رمز تحقق ثانٍ لحماية حسابك.", "Use your institutional email. A second verification code will be requested.")}
+            {l("استخدم بريدك المؤسسي أو سجّل الدخول مباشرة بحساب جوجل.", "Use your institutional email or sign in directly with Google.")}
           </p>
         </div>
 
-        {state.error && (
-          <Alert tone="danger" title={state.error} icon="alert-circle" className="mb-4">
+        {(state.error || googleError) && (
+          <Alert tone="danger" title={googleError ?? state.error!} icon="alert-circle" className="mb-4">
             {l("لم يتم تسجيل الدخول. لا تُشارك بياناتك مع أي شخص.", "Sign-in failed. Never share your credentials.")}
           </Alert>
         )}
+
+        <Button
+          type="button"
+          variant="outline"
+          size="lg"
+          className="w-full justify-center gap-2.5 border-line-strong bg-surface hover:bg-surface-2"
+          onClick={handleGoogleSignIn}
+          loading={googleLoading}
+          disabled={googleLoading}
+        >
+          <span className="grid size-5 place-items-center rounded-full bg-white text-[12px] font-bold text-[#4285F4] shadow-xs" aria-hidden="true">
+            G
+          </span>
+          <span>{googleLoading ? l("جارٍ الربط بحساب جوجل…", "Connecting with Google…") : l("المتابعة بحساب جوجل", "Continue with Google")}</span>
+        </Button>
+
+        <div className="my-4 flex items-center gap-3">
+          <span className="h-px flex-1 bg-line" />
+          <span className="text-[10.5px] font-medium uppercase tracking-wider text-fg-muted">{l("أو بالبريد المؤسسي", "Or with institutional email")}</span>
+          <span className="h-px flex-1 bg-line" />
+        </div>
 
         <form action={action} className="space-y-4" noValidate>
           {next && <input type="hidden" name="next" value={next} />}
@@ -62,7 +118,7 @@ export function LoginForm({
               inputMode="email"
               autoComplete="username"
               dir="ltr"
-              placeholder="name@ziadelshafei.com"
+              placeholder="name@almohandes.edu"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -108,12 +164,10 @@ export function LoginForm({
 
           <p className="flex items-center justify-center gap-1.5 text-[11px] text-fg-muted">
             <Icon name="lock" size={11} />
-            {l("اتصال مشفّر · جلسة HttpOnly · تحقق ثنائي", "Encrypted transport · HttpOnly session · 2FA")}
+            {l("اتصال مشفّر · جلسة HttpOnly · Firebase Auth", "Encrypted transport · HttpOnly session · Firebase Auth")}
           </p>
         </form>
 
-        {demo && (
-          <>
         <div className="my-5 flex items-center gap-3">
           <span className="h-px flex-1 bg-line" />
           <span className="text-[10.5px] font-medium uppercase tracking-wider text-fg-muted">{l("حسابات تجريبية", "Demo accounts")}</span>
@@ -153,9 +207,6 @@ export function LoginForm({
           )}
         </p>
 
-          </>
-        )}
-
         <div className="mt-5 flex items-center justify-center gap-3 text-[11px]">
           <Link href="/" className="text-fg-muted transition hover:text-fg">{l("العودة للرئيسية", "Back to home")}</Link>
           <span className="text-line-strong">·</span>
@@ -165,36 +216,33 @@ export function LoginForm({
 
       <Modal
         open={forgot}
-        onClose={() => setForgot(false)}
+        onClose={() => { setForgot(false); setForgotSent(false); }}
         title={l("استعادة كلمة المرور", "Reset your password")}
-        description={l(
-          "سنرسل رابطاً صالحاً لمدة ساعة إلى بريدك المؤسسي.",
-          "We will email a reset link valid for one hour to your institutional address.",
-        )}
+        description={l("سنرسل رابط استعادة صالحاً لـ15 دقيقة إلى بريدك المؤسسي.", "We will email a reset link valid for 15 minutes to your institutional address.")}
+        footer={
+          <>
+            <Button variant="ghost" size="sm" onClick={() => setForgot(false)}>{l("إلغاء", "Cancel")}</Button>
+            <Button size="sm" onClick={() => setForgotSent(true)} disabled={forgotSent} icon={forgotSent ? "check" : "send"}>
+              {forgotSent ? l("تم الإرسال", "Sent") : l("إرسال الرابط", "Send link")}
+            </Button>
+          </>
+        }
       >
-        {resetState.sent ? (
-          <Alert tone="success" title={l("تحقق من بريدك", "Check your inbox")}>
+        {forgotSent ? (
+          <Alert tone="success" title={l("تم إرسال طلب الاستعادة", "Reset requested")}>
             {l(
-              "لو كان البريد مسجّلاً لدينا فسيصلك رابط إعادة التعيين خلال دقائق. الرابط صالح لساعة ولمرة واحدة.",
-              "If the address exists, a reset link arrives within minutes. It is valid for one hour and single-use.",
+              "في هذا النموذج التجريبي لا يوجد بريد فعلي. استخدم قائمة الحسابات التجريبية للدخول.",
+              "This prototype does not send real email. Use the demo account list to sign in.",
             )}
           </Alert>
         ) : (
-          <form action={resetAction} className="space-y-3">
-            <Field label={l("البريد المؤسسي", "Institutional email")}>
-              <Input name="email" type="email" dir="ltr" defaultValue={email} required autoComplete="email" />
-            </Field>
-            {resetState.error && <Alert tone="danger" title={resetState.error} icon="alert-circle" />}
-            <div className="flex items-center justify-end gap-2 pt-1">
-              <Button type="button" variant="ghost" size="sm" onClick={() => setForgot(false)}>
-                {l("إلغاء", "Cancel")}
-              </Button>
-              <Button type="submit" size="sm" icon="send">
-                {l("إرسال الرابط", "Send link")}
-              </Button>
-            </div>
-          </form>
+          <Field label={l("البريد المؤسسي", "Institutional email")}>
+            <Input dir="ltr" placeholder="name@almohandes.edu" defaultValue={email} />
+          </Field>
         )}
+        <div className="mt-4">
+          <Badge tone="neutral" icon="info">{l("الاستعادة الحقيقية تتطلب خدمة بريد مُهيّأة", "Real reset requires a configured mail service")}</Badge>
+        </div>
       </Modal>
     </>
   );

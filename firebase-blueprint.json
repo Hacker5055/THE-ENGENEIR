@@ -1,0 +1,271 @@
+{
+  "entities": {
+    "UserPublicProfile": {
+      "title": "UserPublicProfile",
+      "description": "Non-PII public profile and portal role metadata for an authenticated user.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the user."
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Display name shown in the portal."
+        },
+        "photoURL": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Avatar image URL from Google Auth."
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "STUDENT",
+            "TEACHER",
+            "EXAM_SUPERVISOR",
+            "INSTITUTION_ADMIN",
+            "SUPER_ADMIN"
+          ],
+          "description": "Assigned institutional role."
+        },
+        "institutionId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Institution scope identifier."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of profile creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last profile update."
+        }
+      },
+      "required": [
+        "uid",
+        "displayName",
+        "photoURL",
+        "role",
+        "institutionId",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "UserPrivateInfo": {
+      "title": "UserPrivateInfo",
+      "description": "Isolated PII and session preference metadata readable only by the owner or admin.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the user."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "minLength": 3,
+          "maxLength": 254,
+          "description": "Verified institutional or Google email address."
+        },
+        "emailVerified": {
+          "type": "boolean",
+          "description": "Whether Firebase Auth verified the email."
+        },
+        "authProvider": {
+          "type": "string",
+          "enum": ["google.com"],
+          "description": "Authentication provider identifier."
+        },
+        "locale": {
+          "type": "string",
+          "enum": ["ar", "en"],
+          "description": "Preferred UI locale."
+        },
+        "theme": {
+          "type": "string",
+          "enum": ["dark", "light"],
+          "description": "Preferred UI theme."
+        },
+        "loginCount": {
+          "type": "number",
+          "description": "Total Google sign-in count."
+        },
+        "lastLoginAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last sign-in."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update."
+        }
+      },
+      "required": [
+        "uid",
+        "email",
+        "emailVerified",
+        "authProvider",
+        "locale",
+        "theme",
+        "loginCount",
+        "lastLoginAt",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "UserActivity": {
+      "title": "UserActivity",
+      "description": "Audit/activity trail entry for user sign-in and portal actions.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the actor."
+        },
+        "action": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "description": "Action identifier (e.g., GOOGLE_SIGN_IN)."
+        },
+        "detail": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300,
+          "description": "Human-readable description of the event."
+        },
+        "portal": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "description": "Portal context."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of the event."
+        }
+      },
+      "required": ["uid", "action", "detail", "portal", "createdAt"]
+    },
+    "UserNote": {
+      "title": "UserNote",
+      "description": "Personal academic or administrative note persisted across devices in Firestore.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Note title."
+        },
+        "content": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000,
+          "description": "Note body text."
+        },
+        "pinned": {
+          "type": "boolean",
+          "description": "Whether the note is pinned."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update."
+        }
+      },
+      "required": ["uid", "title", "content", "pinned", "createdAt", "updatedAt"]
+    },
+    "AdminRecord": {
+      "title": "AdminRecord",
+      "description": "Trusted administrator registry keyed by Firebase Auth UID.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Admin Firebase Auth UID."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "minLength": 3,
+          "maxLength": 254,
+          "description": "Verified admin email."
+        },
+        "grantedBy": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "UID or system identifier that granted admin access."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of grant."
+        }
+      },
+      "required": ["uid", "email", "grantedBy", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/public/profile": {
+      "schema": { "$ref": "#/entities/UserPublicProfile" },
+      "description": "Non-PII public user profile and role metadata."
+    },
+    "/users/{userId}/private/info": {
+      "schema": { "$ref": "#/entities/UserPrivateInfo" },
+      "description": "PII-isolated private user metadata (email, login count, preferences)."
+    },
+    "/users/{userId}/activity/{activityId}": {
+      "schema": { "$ref": "#/entities/UserActivity" },
+      "description": "Immutable user sign-in and portal activity log entries."
+    },
+    "/users/{userId}/notes/{noteId}": {
+      "schema": { "$ref": "#/entities/UserNote" },
+      "description": "User personal notes synced across devices."
+    },
+    "/admins/{userId}": {
+      "schema": { "$ref": "#/entities/AdminRecord" },
+      "description": "Trusted admin lookup collection."
+    }
+  }
+}

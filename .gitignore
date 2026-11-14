@@ -39,9 +39,3 @@ coverage/
 
 # generated exports that should not be versioned
 /tmp/
-
-# database backups produced by scripts/backup-db.mjs
-backups/
-*.db
-*.db-wal
-*.db-shm

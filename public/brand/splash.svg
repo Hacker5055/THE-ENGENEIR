@@ -17,7 +17,7 @@
   <g transform="translate(14.213 36.107) scale(0.0588 -0.0588)"><path d="M46 -60Q46 58 96 114.5Q146 171 251 171L468 171Q466 237 432.5 275Q399 313 348 313Q302 313 275.5 290.5Q249 268 235 230L141 270Q151 318 173 351Q195 384 223 404.5Q251 425 283 434.5Q315 444 346 444Q445 444 502 369Q559 294 559 155L559 40L251 40Q222 40 203 35Q184 30 172.5 18.5Q161 7 156 -12Q151 -31 151 -60L151 -304L46 -304Z" fill="url(#glyphFill)"/></g>
   <path d="M12 55.6H52" stroke="#38A5FF" stroke-width="1.8" stroke-linecap="round" opacity="0.9"/>
   <path d="M12 53.2v4.8M52 53.2v4.8" stroke="#38A5FF" stroke-width="1.6" stroke-linecap="round" opacity="0.55"/></g>
-  <text x="480" y="1160" text-anchor="middle" font-family="IBM Plex Sans Arabic" font-size="84" font-weight="600" fill="#EEF3FA">زياد الشافعي</text>
-  <text x="480" y="1230" text-anchor="middle" font-family="Inter" font-size="30" letter-spacing="16" fill="#34D399">ZIAD EL-SHAFEI</text>
+  <text x="480" y="1160" text-anchor="middle" font-family="IBM Plex Sans Arabic" font-size="84" font-weight="600" fill="#EEF3FA">المهندس</text>
+  <text x="480" y="1230" text-anchor="middle" font-family="Inter" font-size="30" letter-spacing="16" fill="#38A5FF">AL MOHANDES</text>
   <text x="480" y="1940" text-anchor="middle" font-family="IBM Plex Sans Arabic" font-size="26" fill="#93A4BC">إدارة تعليمية ذكية · اختبارات آمنة</text>
 </svg>

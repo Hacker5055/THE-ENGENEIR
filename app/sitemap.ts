@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { DOCS } from "@/lib/docs";
 
-const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ziadelshafei.com";
+const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://almohandes.edu";
 
 /**
  * Only public, crawlable surfaces. Authenticated portals (student/admin/…),

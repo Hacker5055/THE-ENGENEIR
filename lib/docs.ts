@@ -105,7 +105,7 @@ SEC-01   RBAC مركزي يُفحص على الخادم في كل عملية، �
       { t: "h2", ar: "خريطة التطبيق", en: "Sitemap" },
       { t: "code", lang: "text", body: `عام
 ├─ /            الصفحة التعريفية
-├─ /login       دخول + تحقق ثنائي + استعادة كلمة المرور
+├─ /login       دخول + حسابات تجريبية
 ├─ /verify      رمز التحقق بخطوتين
 ├─ /docs        حزمة المستندات
 └─ /docs/[slug] مستند
@@ -246,12 +246,12 @@ SEC-01   RBAC مركزي يُفحص على الخادم في كل عملية، �
     updated: "2026-11-10",
     blocks: [
       { t: "h2", ar: "الفكرة", en: "The idea" },
-      { t: "p", ar: "«زياد الشافعي» يجمع بين اللغة والهندسة: حرف الميم العربي «م» كوحدة أساسية، مع خط مسند أفقي ونهايات دقيقة تستعير منطق المسطرة والمسند الهندسي. الشعار ليس قبعة تخرج ولا كتاباً — بل حرف يُبنى كعنصر إنشائي.", en: "“Ziad El-Shafei” fuses language and engineering: the Arabic letter mīm «م» as the base unit, crossed by a horizontal datum line with precise end ticks borrowed from a drafting ruler. It is neither a graduation cap nor a book — a letter constructed like a structural element." },
+      { t: "p", ar: "«المهندس» يجمع بين اللغة والهندسة: حرف الميم العربي «م» كوحدة أساسية، مع خط مسند أفقي ونهايات دقيقة تستعير منطق المسطرة والمسند الهندسي. الشعار ليس قبعة تخرج ولا كتاباً — بل حرف يُبنى كعنصر إنشائي.", en: "“Al Mohandes” fuses language and engineering: the Arabic letter mīm «م» as the base unit, crossed by a horizontal datum line with precise end ticks borrowed from a drafting ruler. It is neither a graduation cap nor a book — a letter constructed like a structural element." },
       { t: "h2", ar: "الشعار", en: "Logo system" },
       { t: "ul", items: [
         { ar: "الرمز (Monogram): ميم مستخرج من مسار الخط الأصلي IBM Plex Sans Arabic 600 — لا حرف مرسوم يدوياً.", en: "Monogram: the mīm uses the authentic glyph path from IBM Plex Sans Arabic 600 — not a redrawn letter." },
         { ar: "خط المسند: خط أفقي بلون #38A5FF مع نهايتين قصيرتين، يمثل المستوى المرجعي في الرسم الهندسي.", en: "Datum line: a horizontal rule in #38A5FF with two short end ticks, representing the reference plane in technical drawing." },
-        { ar: "الكلمة: «زياد الشافعي» بوزن Book مع ZIAD EL-SHAFEI بحروف متباعدة — للاستخدام في الترويسات.", en: "Wordmark: «زياد الشافعي» in Book weight paired with letter-spaced ZIAD EL-SHAFEI for headers." },
+        { ar: "الكلمة: «المهندس» بوزن Book مع AL MOHANDES بحروف متباعدة — للاستخدام في الترويسات.", en: "Wordmark: «المهندس» in Book weight paired with letter-spaced AL MOHANDES for headers." },
         { ar: "النسخ: كامل الألوان، أحادي داكن، أحادي فاتح، وأيقونة 192/512 للتطبيقات.", en: "Variants: full colour, mono-dark, mono-light, plus 192/512 app icons." },
         { ar: "المساحة الآمنة: ارتفاع الميم × 0.5 حول الرمز في كل الاتجاهات، بلا ظلال أو تدرجات.", en: "Clear space: half the mīm height on all sides, with no shadows or gradients." },
       ] },
@@ -343,7 +343,7 @@ SEC-01   RBAC مركزي يُفحص على الخادم في كل عملية، �
     descEn: "PostgreSQL tables, relations, constraints, and indexes.",
     updated: "2026-11-10",
     blocks: [
-      { t: "note", tone: "success", ar: "التخزين الفعلي في هذه النسخة هو SQLite عبر node:sqlite (ملف واحد، WAL، كتابة متزامنة): كل تعديل يُحفظ داخل معاملة قبل إرسال الاستجابة. db/schema.sql يوثّق الشكل المرجعي نفسه لمن يريد الترحيل إلى PostgreSQL.", en: "The live deployment stores everything in SQLite through node:sqlite (single file, WAL, synchronous writes): every change is committed in a transaction before the response is sent. db/schema.sql documents the same reference shape for a future PostgreSQL migration." },
+      { t: "note", tone: "info", ar: "الملف الكامل القابل للتنفيذ: db/schema.sql في جذر المستودع. البيانات التجريبية هنا مبنية بنفس الأشكال، لذا استبدال المتجر باستعلامات SQL لا يغيّر الواجهات.", en: "Executable source: db/schema.sql at the repository root. The seeded store mirrors these shapes, so replacing it with SQL queries requires no UI change." },
       { t: "h2", ar: "المجموعات الأساسية", en: "Core tables" },
       { t: "table", headers: [{ ar: "الجدول", en: "Table" }, { ar: "الوصف", en: "Description" }, { ar: "مفاتيح", en: "Keys" }], rows: [
         ["institutions", "المؤسسات على المنصة", "id · code uniq · status"],
@@ -462,7 +462,7 @@ db/                schema.sql + بيانات البذر` },
         ["تدوير بيانات مؤقتة", "Transient cleanup", "يومي", "حذف OTP منتهٍ وجلسات ميتة"],
         ["أرشفة الفصول", "Semester archive", "عند إغلاق الفصل", "قفل السجلات مع إبقائها للقراءة"],
       ] },
-      { t: "note", tone: "success", ar: "كل المنطق يعمل على الخادم ويُحفظ في قاعدة SQLite دائمة: الجلسات، محاولات الدخول، إجابات الاختبارات وسجل التدقيق تنجو من إعادة التشغيل. وضع البيانات التجريبية (AM_DEMO_MODE=1) اختياري ومخصص للتدريب فقط.", en: "All logic runs server-side and persists to a durable SQLite database: sessions, login attempts, exam answers and the audit trail survive restarts. The demo dataset (AM_DEMO_MODE=1) is optional and intended for training only." },
+      { t: "note", tone: "success", ar: "في هذه النسخة التجريبية كل المنطق يعمل فعلياً على الخادم داخل الذاكرة (globalThis) — لا واجهة تدّعي وظيفة غير موجودة. استبدال المتجر باستعلامات SQL لا يغيّر أي سلوك.", en: "In this prototype the entire logic genuinely runs server-side in memory (globalThis) — no screen claims a capability it does not have. Swapping the store for SQL changes no behaviour." },
     ],
   },
   {

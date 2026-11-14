@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon, type IconName } from "@/components/icons";
 import { Avatar, Badge, Button, Modal } from "@/components/ui";
-import { usePrefs } from "@/components/providers";
+import { useFirebase, usePrefs } from "@/components/providers";
 import { PrefToggles } from "@/components/pref-toggles";
 import { LogoMark, Wordmark } from "@/components/brand/logo";
 import type { NavGroup } from "@/lib/nav";
@@ -62,6 +62,7 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const { l, locale } = usePrefs();
+  const { signOutFirebase } = useFirebase();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -135,7 +136,7 @@ export function AppShell({
   const sidebar = (
     <div className="flex h-full flex-col">
       <div className={cx("flex h-16 shrink-0 items-center gap-2.5 border-b border-line px-4", collapsed && "justify-center px-2")}>
-        <Link href="/" className="flex items-center gap-2.5 overflow-hidden" aria-label="زياد الشافعي">
+        <Link href="/" className="flex items-center gap-2.5 overflow-hidden" aria-label="المهندس">
           <LogoMark size={34} />
           {!collapsed && <Wordmark locale={locale} size="sm" className="whitespace-nowrap" />}
         </Link>
@@ -192,14 +193,14 @@ export function AppShell({
                 <p className="truncate text-[10px] text-fg-muted">{l(ROLE_LABEL[user.role].ar, ROLE_LABEL[user.role].en)}</p>
               </div>
             </div>
-            <form action={logoutAction} className="mt-2">
+            <form action={logoutAction} onSubmit={() => { void signOutFirebase(); }} className="mt-2">
               <Button type="submit" variant="ghost" size="xs" icon="logout" className="w-full justify-start text-fg-muted">
                 {l("تسجيل الخروج", "Sign out")}
               </Button>
             </form>
           </div>
         ) : (
-          <form action={logoutAction}>
+          <form action={logoutAction} onSubmit={() => { void signOutFirebase(); }}>
             <Button type="submit" variant="ghost" size="icon" aria-label="تسجيل الخروج" className="mx-auto flex">
               <Icon name="logout" size={16} />
             </Button>

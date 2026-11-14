@@ -3,6 +3,7 @@ import { Avatar, Badge, Card, CardHeader, Icon, KeyValue, Progress } from "@/com
 import { PageHeader } from "@/components/shells/app-shell";
 import { db, findDepartment } from "@/lib/server/store";
 import { teacherContext } from "@/lib/server/context";
+import { UserWorkspacePanel } from "@/components/firebase/user-workspace-panel";
 import { fmtDate, makeL, weekdayShort } from "@/lib/utils";
 
 export const metadata = { title: "ملفي" };
@@ -151,6 +152,8 @@ export default async function TeacherProfilePage() {
               ))}
             </div>
           </Card>
+
+          <UserWorkspacePanel />
         </div>
       </div>
     </div>

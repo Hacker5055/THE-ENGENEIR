@@ -146,7 +146,7 @@ export function SettingsPanel({
         <div className="space-y-1.5 text-[10.5px]">
           {[
             [l("الإصدار", "Version"), "1.0.0 (prototype)"],
-            [l("المؤسسة", "Institution"), "ZIAD EL-SHAFEI Academy"],
+            [l("المؤسسة", "Institution"), "AL MOHANDES Academy"],
             [l("بيئة البيانات", "Data environment"), l("تجريبية — تُعاد عند إعادة التشغيل", "Demo — resets on restart")],
           ].map(([k, v]) => (
             <div key={k} className="flex justify-between gap-2">

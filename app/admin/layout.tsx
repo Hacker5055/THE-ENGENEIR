@@ -4,7 +4,7 @@ import { ADMIN_NAV } from "@/lib/nav";
 import { adminContext } from "@/lib/server/context";
 import { db } from "@/lib/server/store";
 
-export const metadata: Metadata = { title: { default: "لوحة الإدارة", template: "%s · زياد الشافعي" } };
+export const metadata: Metadata = { title: { default: "لوحة الإدارة", template: "%s · المهندس" } };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, unread, openComplaints, lockedAttempts } = await adminContext();

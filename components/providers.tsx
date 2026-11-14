@@ -2,6 +2,8 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { onAuthStateChanged, type User as FirebaseUser } from "firebase/auth";
+import { auth, persistPreferencesToFirestore, signOutFromFirebase, testFirestoreConnection } from "@/lib/firebase";
 import type { Locale, Theme } from "@/lib/types";
 import { cx } from "@/lib/utils";
 
@@ -36,21 +38,28 @@ export function PreferencesProvider({
   const setLocale = useCallback(
     (next: Locale) => {
       setLocaleState(next);
-      document.cookie = `am_lang=${next};path=/;max-age=31536000;samesite=lax`;
+      const attrs = location.protocol === "https:" ? "samesite=none;secure" : "samesite=lax";
+      document.cookie = `am_lang=${next};path=/;max-age=31536000;${attrs}`;
       document.documentElement.lang = next;
       document.documentElement.dir = next === "ar" ? "rtl" : "ltr";
+      void persistPreferencesToFirestore(next, theme).catch(() => {});
       router.refresh();
     },
-    [router],
+    [router, theme],
   );
 
-  const setTheme = useCallback((next: Theme) => {
-    setThemeState(next);
-    document.cookie = `am_theme=${next};path=/;max-age=31536000;samesite=lax`;
-    const root = document.documentElement;
-    root.classList.remove("light", "dark");
-    root.classList.add(next);
-  }, []);
+  const setTheme = useCallback(
+    (next: Theme) => {
+      setThemeState(next);
+      const attrs = location.protocol === "https:" ? "samesite=none;secure" : "samesite=lax";
+      document.cookie = `am_theme=${next};path=/;max-age=31536000;${attrs}`;
+      const root = document.documentElement;
+      root.classList.remove("light", "dark");
+      root.classList.add(next);
+      void persistPreferencesToFirestore(locale, next).catch(() => {});
+    },
+    [locale],
+  );
 
   const value = useMemo<PrefCtx>(
     () => ({
@@ -170,3 +179,44 @@ export function useOnline() {
   }, []);
   return online;
 }
+
+/* ------------------------------- firebase auth --------------------------- */
+interface FirebaseCtx {
+  firebaseUser: FirebaseUser | null;
+  authReady: boolean;
+  signOutFirebase: () => Promise<void>;
+}
+
+const FirebaseContext = createContext<FirebaseCtx>({
+  firebaseUser: null,
+  authReady: false,
+  signOutFirebase: async () => {},
+});
+
+export function FirebaseProvider({ children }: { children: React.ReactNode }) {
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+
+  useEffect(() => {
+    void testFirestoreConnection();
+    const unsub = onAuthStateChanged(auth, (user) => {
+      setFirebaseUser(user);
+      setAuthReady(true);
+    });
+    return () => unsub();
+  }, []);
+
+  const value = useMemo<FirebaseCtx>(
+    () => ({
+      firebaseUser,
+      authReady,
+      signOutFirebase: signOutFromFirebase,
+    }),
+    [firebaseUser, authReady],
+  );
+
+  return <FirebaseContext.Provider value={value}>{children}</FirebaseContext.Provider>;
+}
+
+export const useFirebase = () => useContext(FirebaseContext);
+
