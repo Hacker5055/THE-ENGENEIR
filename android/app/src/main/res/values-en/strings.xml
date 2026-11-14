@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">AL MOHANDES</string>
-    <string name="app_name_latin">AL MOHANDES</string>
+    <string name="app_name">ZIAD EL-SHAFEI</string>
+    <string name="app_name_latin">ZIAD EL-SHAFEI</string>
 
     <string name="server_title">Server address</string>
-    <string name="server_message">Enter the address of the AL MOHANDES deployment this app should open (for example https://almohandes.edu). You can change it later from the error screen.</string>
-    <string name="server_hint">https://almohandes.edu</string>
+    <string name="server_message">Enter the address of the ZIAD EL-SHAFEI deployment this app should open (for example https://ziadelshafei.com). You can change it later from the error screen.</string>
+    <string name="server_hint">https://ziadelshafei.com</string>
     <string name="server_save">Connect</string>
 
     <string name="error_title">The platform is unreachable</string>

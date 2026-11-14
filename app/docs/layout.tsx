@@ -13,7 +13,7 @@ export default async function DocsLayout({ children }: { children: React.ReactNo
     <div className="min-h-screen bg-bg text-fg">
       <header className="sticky top-0 z-30 border-b border-line bg-bg/85 backdrop-blur-md">
         <div className="container-app flex h-14 items-center gap-3">
-          <Link href="/" className="flex items-center gap-2" aria-label="المهندس">
+          <Link href="/" className="flex items-center gap-2" aria-label="زياد الشافعي">
             <LogoMark size={28} />
             <Wordmark locale={locale} size="sm" />
           </Link>
@@ -32,7 +32,7 @@ export default async function DocsLayout({ children }: { children: React.ReactNo
       {children}
       <footer className="border-t border-line py-6">
         <div className="container-app flex flex-wrap items-center justify-between gap-2 text-[10.5px] text-fg-muted">
-          <span>© 2026 {l("المهندس — نظام إدارة التعليم الهندسي", "Al Mohandes — engineering education management")}</span>
+          <span>© 2026 {l("زياد الشافعي — نظام إدارة التعليم الهندسي", "Al Mohandes — engineering education management")}</span>
           <span className="font-mono">v1.0 · 2026-11</span>
         </div>
       </footer>

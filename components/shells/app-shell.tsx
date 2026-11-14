@@ -135,7 +135,7 @@ export function AppShell({
   const sidebar = (
     <div className="flex h-full flex-col">
       <div className={cx("flex h-16 shrink-0 items-center gap-2.5 border-b border-line px-4", collapsed && "justify-center px-2")}>
-        <Link href="/" className="flex items-center gap-2.5 overflow-hidden" aria-label="المهندس">
+        <Link href="/" className="flex items-center gap-2.5 overflow-hidden" aria-label="زياد الشافعي">
           <LogoMark size={34} />
           {!collapsed && <Wordmark locale={locale} size="sm" className="whitespace-nowrap" />}
         </Link>

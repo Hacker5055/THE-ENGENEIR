@@ -15,13 +15,16 @@
  *
  * Exits non-zero if any assertion fails.
  */
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
+import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const BASE = (process.env.BASE_URL ?? "http://127.0.0.1:3000").replace(/\/$/, "");
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
-const STATE_FILE = process.env.AM_STATE_FILE ?? join(REPO, ".data", "auth-state.json");
+const DB_PATH = (() => {
+  const configured = process.env.AM_DB_PATH?.trim() || "./.data/ziadelshafei.db";
+  return isAbsolute(configured) ? configured : resolve(REPO, configured);
+})();
 
 const results = [];
 let failed = 0;
@@ -67,13 +70,21 @@ async function req(path, { method = "GET", body, cookie, headers = {}, redirect 
   return res;
 }
 
+/**
+ * In demo mode the verification code is stored alongside the hashed challenge
+ * so it can be shown on screen. Reading it here keeps the smoke test honest:
+ * it still goes through the real sign-in + verify endpoints.
+ */
 function codeFor(challengeId) {
+  let db;
   try {
-    const state = JSON.parse(readFileSync(STATE_FILE, "utf8"));
-    const hit = (state.pending ?? []).find(([id]) => id === challengeId);
-    return hit?.[1]?.code ?? null;
+    db = new DatabaseSync(DB_PATH);
+    const row = db.prepare("SELECT demo_code FROM auth_challenges WHERE id = ?").get(challengeId);
+    return row?.demo_code ?? null;
   } catch {
     return null;
+  } finally {
+    db?.close();
   }
 }
 
@@ -107,7 +118,7 @@ const ROUTES = {
     "/student/security", "/student/settings", "/student/profile", "/student/search",
   ],
   teacher: [
-    "/teacher", "/teacher/classes", "/teacher/attendance", "/teacher/attendance/ats_live_cs301",
+    "/teacher", "/teacher/classes", "/teacher/attendance", "/teacher/attendance/ats_live_g10",
     "/teacher/exams", "/teacher/exams/new", "/teacher/exams/exm_ds_mid", "/teacher/questions",
     "/teacher/grading", "/teacher/grades", "/teacher/profile",
   ],
@@ -123,11 +134,11 @@ const ROUTES = {
 };
 
 const ACCOUNTS = {
-  student: ["student@almohandes.edu", "Student@123"],
-  teacher: ["teacher@almohandes.edu", "Teacher@123"],
-  admin: ["admin@almohandes.edu", "Admin@123"],
-  supervisor: ["supervisor@almohandes.edu", "Super@123"],
-  root: ["root@almohandes.edu", "Root@123"],
+  student: ["student@ziadelshafei.com", "Student@123"],
+  teacher: ["teacher@ziadelshafei.com", "Teacher@123"],
+  admin: ["admin@ziadelshafei.com", "Admin@123"],
+  supervisor: ["supervisor@ziadelshafei.com", "Super@123"],
+  root: ["root@ziadelshafei.com", "Root@123"],
 };
 
 /* --------------------------------- main --------------------------------- */
@@ -149,7 +160,7 @@ for (const [role, [email, password]] of Object.entries(ACCOUNTS)) {
 }
 
 // Deep link: /admin/complaints must survive the whole sign-in chain.
-const deep = await signIn("admin@almohandes.edu", "Admin@123", "/admin/complaints");
+const deep = await signIn("admin@ziadelshafei.com", "Admin@123", "/admin/complaints");
 check("deep link is carried into the verify step", deep.ok && deep.location.includes("next="), deep.location);
 const deepLanding = await req("/welcome?next=%2Fadmin%2Fcomplaints", { cookie: deep.cookie });
 check(
@@ -159,7 +170,7 @@ check(
 );
 
 // A signed-in student must not be able to jump into /admin through `next`.
-const studentDeep = await signIn("student@almohandes.edu", "Student@123", "/admin/audit");
+const studentDeep = await signIn("student@ziadelshafei.com", "Student@123", "/admin/audit");
 const blocked = await req("/welcome?next=%2Fadmin%2Faudit", { cookie: studentDeep.cookie });
 check(
   "cross-role deep link falls back to the student home",
@@ -205,7 +216,7 @@ if (sessions.admin) {
       nameAr: `د. اختبار ${uniq}`,
       nameEn: `Smoke Teacher ${uniq}`,
       departmentId: "dept_cs",
-      email: `smoke.${uniq}@almohandes.edu`,
+      email: `smoke.${uniq}@ziadelshafei.com`,
     }),
     cookie: sessions.admin,
     headers: { "content-type": "application/json" },
@@ -219,7 +230,7 @@ if (sessions.admin) {
       nameAr: `مكرر ${uniq}`,
       nameEn: `Duplicate ${uniq}`,
       departmentId: "dept_cs",
-      email: `smoke.${uniq}@almohandes.edu`,
+      email: `smoke.${uniq}@ziadelshafei.com`,
     }),
     cookie: sessions.admin,
     headers: { "content-type": "application/json" },
@@ -228,11 +239,11 @@ if (sessions.admin) {
 }
 
 // Public card verification (what the QR on the student ID opens).
-const card = await req("/verify/AM20261042", { cookie: jar() });
+const card = await req("/verify/ZS2026001", { cookie: jar() });
 const cardHtml = card.status === 200 ? await card.text() : "";
 check(
   "public card verification renders for a real student",
-  card.status === 200 && cardHtml.includes("محمود") && cardHtml.includes("AM20261042"),
+  card.status === 200 && cardHtml.includes("يوسف") && cardHtml.includes("ZS2026001"),
   `status ${card.status}`,
 );
 check(
@@ -258,7 +269,7 @@ check("web app manifest is served", manifest.status === 200 && (await manifest.t
 
 // Global ⌘K search must respect role scoping on the server.
 if (sessions.admin && sessions.student) {
-  const adminQ = await req("/api/v1/search?q=AM20261042", { cookie: sessions.admin });
+  const adminQ = await req("/api/v1/search?q=ZS2026001", { cookie: sessions.admin });
   const adminBody = await adminQ.json().catch(() => ({}));
   const adminKinds = (adminBody.groups ?? []).flatMap((g) => g.items.map((i) => i.kind));
   check(
@@ -267,7 +278,7 @@ if (sessions.admin && sessions.student) {
     `kinds ${[...new Set(adminKinds)].join(",") || "none"}`,
   );
 
-  const studentQ = await req("/api/v1/search?q=AM20261042", { cookie: sessions.student });
+  const studentQ = await req("/api/v1/search?q=ZS2026001", { cookie: sessions.student });
   const studentBody = await studentQ.json().catch(() => ({}));
   const studentKinds = (studentBody.groups ?? []).flatMap((g) => g.items.map((i) => i.kind));
   check(
@@ -276,7 +287,7 @@ if (sessions.admin && sessions.student) {
     `kinds ${[...new Set(studentKinds)].join(",") || "none"}`,
   );
 
-  const anonQ = await req("/api/v1/search?q=AM20261042", { cookie: jar() });
+  const anonQ = await req("/api/v1/search?q=ZS2026001", { cookie: jar() });
   check("search: anonymous request is rejected", anonQ.status === 401, `status ${anonQ.status}`);
 }
 
@@ -355,7 +366,7 @@ if (sessions.student) {
 
 /* ------------------------------- attendance ----------------------------- */
 if (sessions.student) {
-  const token = await req("/api/v1/attendance/sessions/ats_live_cs301/token", { cookie: sessions.student });
+  const token = await req("/api/v1/attendance/sessions/ats_live_g10/token", { cookie: sessions.student });
   const tokenBody = await token.json().catch(() => ({}));
   check("attendance: rotating token issued", token.status === 200 && Boolean(tokenBody.token), tokenBody.token ?? "");
   check("attendance: token has short expiry", (tokenBody.expiresAt ?? 0) - (tokenBody.serverNow ?? 0) <= 25_000, "");

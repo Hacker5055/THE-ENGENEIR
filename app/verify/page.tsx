@@ -41,7 +41,7 @@ export default async function VerifyPage({
       <main className="relative flex flex-1 items-center justify-center px-5 pb-16">
         <div className="w-full max-w-[400px] rounded-2xl border border-line bg-surface/70 p-6 shadow-lg backdrop-blur-xl">
           <OtpForm
-            challengeId={challengeId!}
+            challengeId={challengeId ?? ""}
             next={sp.next}
             demoCode={challenge.demoCode}
             email={challenge.email}

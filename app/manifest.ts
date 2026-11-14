@@ -2,16 +2,16 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "المهندس · AL MOHANDES",
-    short_name: "المهندس",
+    name: "زياد الشافعي — البرمجة وعلوم الحاسب",
+    short_name: "زياد الشافعي",
     description:
-      "منصة إدارة تعليمية ثنائية اللغة: حضور، مقررات، درجات، واختبارات إلكترونية بمحرّك آمن.",
+      "البرمجة وعلوم الحاسب للصفوف الثلاثة الثانوية — البكالوريا المصرية: شرح، كتب الوزارة، اختبارات، وحضور موثّق.",
     start_url: "/student",
     scope: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#0B1424",
-    theme_color: "#101B2D",
+    background_color: "#000000",
+    theme_color: "#000000",
     lang: "ar",
     dir: "rtl",
     icons: [

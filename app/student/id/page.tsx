@@ -36,8 +36,8 @@ export default async function DigitalIdPage() {
               <div className="flex items-center gap-2">
                 <LogoGlyph className="size-7" />
                 <div>
-                  <p className="text-[11px] font-semibold leading-none">المهندس</p>
-                  <p className="mt-0.5 text-[6.5px] tracking-[0.22em] text-accent-400">AL MOHANDES</p>
+                  <p className="text-[11px] font-semibold leading-none">زياد الشافعي</p>
+                  <p className="mt-0.5 text-[6.5px] tracking-[0.22em] text-accent-400">ZIAD EL-SHAFEI</p>
                 </div>
               </div>
               <div className="text-end">

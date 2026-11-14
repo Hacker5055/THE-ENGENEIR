@@ -17,6 +17,20 @@ export function verifyPassword(password: string, stored: string) {
   return candidate.length === expected.length && timingSafeEqual(candidate, expected);
 }
 
+/**
+ * One-off password for a newly created account. Generated per account (never a
+ * shared default), 18 chars from an unambiguous alphabet so it can be read over
+ * the phone without confusion.
+ */
+export function generateTemporaryPassword(): string {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#%&*";
+  const bytes = randomBytes(18);
+  let out = "";
+  for (const byte of bytes) out += alphabet[byte % alphabet.length];
+  // Guarantee the policy (upper, lower, digit, symbol) regardless of the draw.
+  return `Am9!${out.slice(4)}`;
+}
+
 /** Role-based demo passwords — documented in the README. */
 export const ROLE_PASSWORD = {
   STUDENT: "Student@123",

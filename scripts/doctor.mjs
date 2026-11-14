@@ -8,9 +8,9 @@
  * Node version, lockfile/manifest drift, the platform-native Next binaries,
  * and whether the project can write its build directory.
  */
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, isAbsolute, join } from "node:path";
 
 const root = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
 const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
@@ -45,7 +45,8 @@ if (!lock) {
   bad("package-lock.json", `describes ${lock.name}@${lock.version}, package.json says ${pkg.name}@${pkg.version}`);
 } else {
   const declared = Object.keys({ ...pkg.dependencies, ...pkg.devDependencies }).sort();
-  const locked = Object.keys(lock.packages?.[""]?.dependencies ?? {}).sort();
+  const rootEntry = lock.packages?.[""] ?? {};
+  const locked = Object.keys({ ...rootEntry.dependencies, ...rootEntry.devDependencies }).sort();
   const drift = declared.filter((d) => !locked.includes(d));
   if (drift.length) bad("Lock is in sync", `not locked: ${drift.join(", ")}`);
   else ok("Lock is in sync", `${declared.length} direct dependencies`);
@@ -74,6 +75,40 @@ if (!wanted) {
     else if (inLock && !depsInstalled) info(`native binary ${dep} — will install with \`npm ci\``);
     else if (inLock) bad(`native binary ${dep}`, "in the lockfile but not installed — run `npm ci` again");
     else bad(`native binary ${dep}`, "missing from package-lock.json — the build will fail on this platform");
+  }
+}
+
+/* ------------------------------- storage ------------------------------- */
+try {
+  const { DatabaseSync } = await import("node:sqlite");
+  const probe = new DatabaseSync(":memory:");
+  probe.exec("CREATE TABLE probe (a TEXT)");
+  probe.prepare("INSERT INTO probe VALUES (?)").run("ok");
+  probe.close();
+  ok("SQLite engine (node:sqlite)", "built into this Node runtime — no native module to compile");
+} catch (error) {
+  bad("SQLite engine (node:sqlite)", `unavailable: ${error instanceof Error ? error.message : error} — Node 22.5+ is required`);
+}
+
+const dbPath = process.env.AM_DB_PATH?.trim() || "./.data/almohandes.db";
+const dbDir = dirname(isAbsolute(dbPath) ? dbPath : join(root, dbPath));
+try {
+  mkdirSync(dbDir, { recursive: true, mode: 0o700 });
+  const probeFile = join(dbDir, ".doctor-probe");
+  writeFileSync(probeFile, "1");
+  rmSync(probeFile, { force: true });
+  ok("Database directory is writable", dbDir);
+} catch (error) {
+  bad("Database directory is writable", `${dbDir} — ${error instanceof Error ? error.message : error}`);
+}
+
+if (process.env.AM_DEMO_MODE === "1") {
+  info("AM_DEMO_MODE=1 — demo data will be loaded (training only, not for real records)");
+} else if (process.env.NODE_ENV === "production" || process.env.AM_DEMO_MODE === "0") {
+  if (!process.env.AM_ADMIN_EMAIL || !process.env.AM_ADMIN_PASSWORD) {
+    info("production mode without AM_ADMIN_EMAIL/AM_ADMIN_PASSWORD — the first run will refuse to bootstrap (see .env.example)");
+  } else {
+    ok("Production bootstrap credentials present");
   }
 }
 
