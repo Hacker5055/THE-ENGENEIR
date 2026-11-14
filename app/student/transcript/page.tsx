@@ -26,7 +26,7 @@ export default async function TranscriptPage() {
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="text-[9px] uppercase tracking-widest text-fg-muted">{l("المؤسسة", "Institution")}</p>
-              <p className="mt-0.5 text-[11.5px] font-semibold leading-snug text-fg">{l("أكاديمية المهندس للهندسة والتكنولوجيا", "AL MOHANDES Academy of Engineering & Technology")}</p>
+              <p className="mt-0.5 text-[11.5px] font-semibold leading-snug text-fg">{l("منصة مستر زياد الشافعي", "Ziad El-Shafei — Programming & Computer Science")}</p>
               <p className="mt-1 text-[10.5px] text-fg-muted">{student.nameAr} · <span className="font-mono">{student.studentNumber}</span></p>
               <p className="text-[10px] text-fg-muted">{l(department.nameAr, department.nameEn)} · {l("المستوى", "Level")} {student.level}</p>
             </div>

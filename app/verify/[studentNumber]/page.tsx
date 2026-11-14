@@ -52,7 +52,7 @@ export default async function VerifyCardPage({
         <div className="flex items-center justify-center gap-2.5">
           <LogoMark size={34} />
           <div>
-            <p className="text-[13px] font-semibold leading-tight">المهندس · AL MOHANDES</p>
+            <p className="text-[13px] font-semibold leading-tight">زياد الشافعي · ZIAD EL-SHAFEI</p>
             <p className="text-[10px] text-fg-muted">{l("خدمة التحقق من الهوية الجامعية", "University card verification")}</p>
           </div>
         </div>
@@ -131,7 +131,7 @@ export default async function VerifyCardPage({
         </div>
 
         <p className="mt-4 text-center text-[10px] text-fg-muted">
-          {institution ? `${l(institution.nameAr, institution.nameEn)} · ${institution.city}` : "AL MOHANDES"}
+          {institution ? `${l(institution.nameAr, institution.nameEn)} · ${institution.city}` : "ZIAD EL-SHAFEI"}
         </p>
         <div className="mt-3 flex items-center justify-center gap-3 text-[10.5px] text-fg-muted">
           <Link href="/" className="transition hover:text-fg">

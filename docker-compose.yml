@@ -7,7 +7,7 @@ services:
     env_file: .env
     environment:
       NODE_ENV: production
-      AM_DB_PATH: /data/almohandes.db
+      AM_DB_PATH: /data/ziadelshafei.db
     ports:
       - "3000:3000"
     volumes:

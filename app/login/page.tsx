@@ -12,11 +12,11 @@ import { tx } from "@/lib/utils";
 export const metadata = { title: "تسجيل الدخول" };
 
 const ROLE_EMAIL: Record<string, string> = {
-  student: "student@almohandes.edu",
-  teacher: "teacher@almohandes.edu",
-  admin: "admin@almohandes.edu",
-  supervisor: "supervisor@almohandes.edu",
-  root: "root@almohandes.edu",
+  student: "student@ziadelshafei.com",
+  teacher: "teacher@ziadelshafei.com",
+  admin: "admin@ziadelshafei.com",
+  supervisor: "supervisor@ziadelshafei.com",
+  root: "root@ziadelshafei.com",
 };
 
 export default async function LoginPage({
@@ -49,7 +49,7 @@ export default async function LoginPage({
 
         <div className="relative max-w-md">
           <h2 className="text-[30px] font-semibold leading-tight text-white">
-            {tx(locale, "منظومة واحدة لكل ما يحدث داخل المؤسسة التعليمية.", "One system for everything inside the institution.")}
+            {tx(locale, "البرمجة وعلوم الحاسب — من أول كود لأول مشروع.", "Programming & Computer Science — from the first line of code to the first project.")}
           </h2>
           <p className="mt-4 text-[13.5px] leading-relaxed text-white/55">
             {tx(
@@ -124,10 +124,10 @@ export default async function LoginPage({
           </noscript>
         </div>
         <div className="border-t border-line px-5 py-3 text-center text-[10.5px] text-fg-muted">
-          © 2026 AL MOHANDES ·{" "}
+          © 2026 ZIAD EL-SHAFEI ·{" "}
           {demo
             ? tx(locale, "بيئة تدريب — بيانات تجريبية", "Training environment — demo data")
-            : tx(locale, "منصة المهندس — نسخة الإنتاج", "Al Mohandes Platform")}
+            : tx(locale, "منصة زياد الشافعي — نسخة الإنتاج", "Al Mohandes Platform")}
         </div>
       </main>
     </div>

@@ -12,7 +12,7 @@ plugins {
  * The value becomes the default in the in-app "server address" screen, so the
  * user can still change it on the device afterwards.
  */
-val appUrl: String = (project.findProperty("AM_APP_URL") as String?) ?: "https://almohandes.edu"
+val appUrl: String = (project.findProperty("AM_APP_URL") as String?) ?: "https://ziadelshafei.com"
 
 android {
     namespace = "edu.almohandes.app"

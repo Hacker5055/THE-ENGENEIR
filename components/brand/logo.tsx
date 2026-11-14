@@ -1,7 +1,7 @@
 import { cx } from "@/lib/utils";
 
 /**
- * AL MOHANDES monogram — the authentic Arabic mīm (IBM Plex Sans Arabic 600)
+ * ZIAD EL-SHAFEI monogram — the authentic Arabic mīm (IBM Plex Sans Arabic 600)
  * set inside a measured architectural frame: a cyan datum line with end ticks
  * reads as structural engineering, while the letterform keeps it unmistakably
  * Arabic. No graduation-cap cliché.
@@ -11,7 +11,7 @@ const GLYPH_PATH =
 
 export function LogoGlyph({ className, mono = false }: { className?: string; mono?: boolean }) {
   return (
-    <svg viewBox="0 0 64 64" fill="none" className={className} role="img" aria-label="المهندس">
+    <svg viewBox="0 0 64 64" fill="none" className={className} role="img" aria-label="زياد الشافعي">
       <defs>
         <linearGradient id="amGlyph" x1="14" y1="10" x2="50" y2="54" gradientUnits="userSpaceOnUse">
           <stop stopColor="#FFFFFF" />
@@ -76,9 +76,9 @@ export function Wordmark({
   showTagline?: boolean;
   className?: string;
 }) {
-  const title = locale === "ar" ? "المهندس" : "AL MOHANDES";
-  const sub = "AL MOHANDES";
-  const tagline = locale === "ar" ? "إدارة تعليمية ذكية · اختبارات آمنة" : "Intelligent Education · Secure Exams";
+  const title = locale === "ar" ? "زياد الشافعي" : "ZIAD EL-SHAFEI";
+  const sub = "PROGRAMMING · CS";
+  const tagline = locale === "ar" ? "البرمجة وعلوم الحاسب · البكالوريا" : "Programming & Computer Science";
   const sizes = {
     sm: { t: "text-[15px] leading-none", s: "text-[7.5px] tracking-[0.26em]" },
     md: { t: "text-xl leading-none", s: "text-[8.5px] tracking-[0.28em]" },

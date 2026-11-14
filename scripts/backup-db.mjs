@@ -14,11 +14,11 @@ const args = process.argv.slice(2);
 const outIndex = args.indexOf("--out");
 const outDir = resolve(outIndex >= 0 ? args[outIndex + 1] : "./backups");
 
-const configured = process.env.AM_DB_PATH?.trim() || "./.data/almohandes.db";
+const configured = process.env.AM_DB_PATH?.trim() || "./.data/ziadelshafei.db";
 const source = isAbsolute(configured) ? configured : resolve(process.cwd(), configured);
 
 const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-const target = join(outDir, `almohandes-${stamp}.db`);
+const target = join(outDir, `ziadelshafei-${stamp}.db`);
 
 mkdirSync(dirname(target), { recursive: true, mode: 0o700 });
 

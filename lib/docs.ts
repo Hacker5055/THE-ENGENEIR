@@ -246,12 +246,12 @@ SEC-01   RBAC مركزي يُفحص على الخادم في كل عملية، �
     updated: "2026-11-10",
     blocks: [
       { t: "h2", ar: "الفكرة", en: "The idea" },
-      { t: "p", ar: "«المهندس» يجمع بين اللغة والهندسة: حرف الميم العربي «م» كوحدة أساسية، مع خط مسند أفقي ونهايات دقيقة تستعير منطق المسطرة والمسند الهندسي. الشعار ليس قبعة تخرج ولا كتاباً — بل حرف يُبنى كعنصر إنشائي.", en: "“Al Mohandes” fuses language and engineering: the Arabic letter mīm «م» as the base unit, crossed by a horizontal datum line with precise end ticks borrowed from a drafting ruler. It is neither a graduation cap nor a book — a letter constructed like a structural element." },
+      { t: "p", ar: "«زياد الشافعي» يجمع بين اللغة والهندسة: حرف الميم العربي «م» كوحدة أساسية، مع خط مسند أفقي ونهايات دقيقة تستعير منطق المسطرة والمسند الهندسي. الشعار ليس قبعة تخرج ولا كتاباً — بل حرف يُبنى كعنصر إنشائي.", en: "“Ziad El-Shafei” fuses language and engineering: the Arabic letter mīm «م» as the base unit, crossed by a horizontal datum line with precise end ticks borrowed from a drafting ruler. It is neither a graduation cap nor a book — a letter constructed like a structural element." },
       { t: "h2", ar: "الشعار", en: "Logo system" },
       { t: "ul", items: [
         { ar: "الرمز (Monogram): ميم مستخرج من مسار الخط الأصلي IBM Plex Sans Arabic 600 — لا حرف مرسوم يدوياً.", en: "Monogram: the mīm uses the authentic glyph path from IBM Plex Sans Arabic 600 — not a redrawn letter." },
         { ar: "خط المسند: خط أفقي بلون #38A5FF مع نهايتين قصيرتين، يمثل المستوى المرجعي في الرسم الهندسي.", en: "Datum line: a horizontal rule in #38A5FF with two short end ticks, representing the reference plane in technical drawing." },
-        { ar: "الكلمة: «المهندس» بوزن Book مع AL MOHANDES بحروف متباعدة — للاستخدام في الترويسات.", en: "Wordmark: «المهندس» in Book weight paired with letter-spaced AL MOHANDES for headers." },
+        { ar: "الكلمة: «زياد الشافعي» بوزن Book مع ZIAD EL-SHAFEI بحروف متباعدة — للاستخدام في الترويسات.", en: "Wordmark: «زياد الشافعي» in Book weight paired with letter-spaced ZIAD EL-SHAFEI for headers." },
         { ar: "النسخ: كامل الألوان، أحادي داكن، أحادي فاتح، وأيقونة 192/512 للتطبيقات.", en: "Variants: full colour, mono-dark, mono-light, plus 192/512 app icons." },
         { ar: "المساحة الآمنة: ارتفاع الميم × 0.5 حول الرمز في كل الاتجاهات، بلا ظلال أو تدرجات.", en: "Clear space: half the mīm height on all sides, with no shadows or gradients." },
       ] },

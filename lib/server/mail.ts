@@ -78,7 +78,7 @@ const wrap = (title: string, body: string, footer: string) => `<!doctype html>
 <html lang="ar" dir="rtl"><body style="margin:0;background:#070d1b;padding:32px 16px;font-family:system-ui,'Segoe UI',Tahoma,sans-serif">
   <table role="presentation" width="100%" style="max-width:560px;margin:0 auto;background:#0d1526;border:1px solid #1e2b47;border-radius:16px;overflow:hidden">
     <tr><td style="padding:24px 28px;border-bottom:1px solid #1e2b47">
-      <span style="color:#7aa2ff;font-size:13px;letter-spacing:.08em">AL MOHANDES</span>
+      <span style="color:#7aa2ff;font-size:13px;letter-spacing:.08em">ZIAD EL-SHAFEI</span>
       <h1 style="margin:8px 0 0;color:#f3f6ff;font-size:19px;font-weight:600">${title}</h1>
     </td></tr>
     <tr><td style="padding:24px 28px;color:#c3cee6;font-size:14px;line-height:1.8">${body}</td></tr>
@@ -89,14 +89,14 @@ const wrap = (title: string, body: string, footer: string) => `<!doctype html>
 export function sendVerificationCode(to: string, code: string, minutes: number) {
   return sendMail({
     to,
-    subject: "رمز التحقق — منصة المهندس",
+    subject: "رمز التحقق — منصة زياد الشافعي",
     text: `رمز التحقق الخاص بك: ${code}\nصالح لمدة ${minutes} دقائق.`,
     html: wrap(
       "رمز التحقق بخطوتين",
       `<p>استخدم الرمز التالي لإكمال تسجيل الدخول:</p>
        <p style="margin:18px 0;font-size:30px;letter-spacing:10px;color:#f3f6ff;font-weight:700">${code}</p>
        <p>الرمز صالح لمدة ${minutes} دقائق ولمرة واحدة. إن لم تكن أنت من طلب الدخول فتجاهل الرسالة وغيّر كلمة المرور.</p>`,
-      "هذه رسالة آلية من منصة المهندس — لا ترد عليها.",
+      "هذه رسالة آلية من منصة زياد الشافعي — لا ترد عليها.",
     ),
   });
 }
@@ -104,7 +104,7 @@ export function sendVerificationCode(to: string, code: string, minutes: number) 
 export function sendPasswordReset(to: string, link: string, minutes: number) {
   return sendMail({
     to,
-    subject: "إعادة تعيين كلمة المرور — منصة المهندس",
+    subject: "إعادة تعيين كلمة المرور — منصة زياد الشافعي",
     text: `لإعادة تعيين كلمة المرور افتح الرابط:\n${link}\nصالح لمدة ${minutes} دقيقة.`,
     html: wrap(
       "إعادة تعيين كلمة المرور",
@@ -113,7 +113,7 @@ export function sendPasswordReset(to: string, link: string, minutes: number) {
          <a href="${link}" style="display:inline-block;background:#2864d9;color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:600">تعيين كلمة مرور جديدة</a>
        </p>
        <p style="font-size:12.5px;color:#8b98b4">الرابط صالح ${minutes} دقيقة ولمرة واحدة. لو لم تطلب ذلك، تجاهل الرسالة — كلمتك الحالية تبقى فعالة.</p>`,
-      "هذه رسالة آلية من منصة المهندس — لا ترد عليها.",
+      "هذه رسالة آلية من منصة زياد الشافعي — لا ترد عليها.",
     ),
   });
 }
@@ -126,19 +126,19 @@ export function sendWelcomeCredentials(input: {
 }) {
   return sendMail({
     to: input.to,
-    subject: "تم إنشاء حسابك — منصة المهندس",
+    subject: "تم إنشاء حسابك — منصة زياد الشافعي",
     text: `مرحباً ${input.name},\nتم إنشاء حسابك.\nالبريد: ${input.to}\nكلمة المرور المؤقتة: ${input.password}\nستُطلب منك تغييرها عند أول دخول: ${input.loginUrl}`,
     html: wrap(
       "تم إنشاء حسابك",
       `<p>مرحباً ${input.name}،</p>
-       <p>أنشأ مدير النظام حسابك على منصة المهندس.</p>
+       <p>أنشأ مدير النظام حسابك على منصة زياد الشافعي.</p>
        <p style="margin:16px 0;background:#111c33;border:1px solid #1e2b47;border-radius:10px;padding:14px">
          <span style="color:#8b98b4;font-size:12.5px">البريد</span><br><b style="color:#f3f6ff">${input.to}</b><br>
          <span style="color:#8b98b4;font-size:12.5px">كلمة المرور المؤقتة</span><br><b style="color:#f3f6ff;font-family:monospace">${input.password}</b>
        </p>
        <p>ستُطلب منك تعيين كلمة مرور جديدة عند أول تسجيل دخول.</p>
        <p style="margin:20px 0"><a href="${input.loginUrl}" style="display:inline-block;background:#2864d9;color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:600">الدخول إلى المنصة</a></p>`,
-      "هذه رسالة آلية من منصة المهندس — لا ترد عليها.",
+      "هذه رسالة آلية من منصة زياد الشافعي — لا ترد عليها.",
     ),
   });
 }

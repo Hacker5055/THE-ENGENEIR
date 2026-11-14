@@ -62,7 +62,7 @@ export function LoginForm({
               inputMode="email"
               autoComplete="username"
               dir="ltr"
-              placeholder="name@almohandes.edu"
+              placeholder="name@ziadelshafei.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required

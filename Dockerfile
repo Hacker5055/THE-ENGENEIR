@@ -22,7 +22,7 @@ FROM node:22-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
-    AM_DB_PATH=/data/almohandes.db \
+    AM_DB_PATH=/data/ziadelshafei.db \
     PORT=3000
 
 RUN useradd --system --uid 10001 --create-home almohandes \

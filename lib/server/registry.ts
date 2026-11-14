@@ -64,7 +64,7 @@ export function createStudentRecord(actor: SessionUser, input: CreateStudentInpu
   }
 
   const studentNumber = nextStudentNumber();
-  const domain = db().institutions[0]?.domain || "almohandes.edu";
+  const domain = db().institutions[0]?.domain || "ziadelshafei.com";
   const email = `${studentNumber.toLowerCase()}@${domain}`;
   // Never a shared default: production accounts get a one-off password that
   // must be changed at first sign-in. Demo mode keeps the documented password
@@ -92,7 +92,7 @@ export function createStudentRecord(actor: SessionUser, input: CreateStudentInpu
     phone: phone || "—",
     departmentId,
     level,
-    sectionId: section?.id ?? "sec_cs3a",
+    sectionId: section?.id ?? "sec_g10",
     academicStatus: "ACTIVE",
     gpa: 0,
     attendanceRate: 100,
@@ -160,7 +160,9 @@ export function createTeacherRecord(actor: SessionUser, input: CreateTeacherInpu
   if (nameAr.length < 3) return { ok: false, error: "الاسم بالعربية مطلوب (3 أحرف على الأقل)." };
   if (nameEn.length < 3) return { ok: false, error: "Name in English is required (at least 3 characters)." };
   if (!db().departments.some((d) => d.id === departmentId)) return { ok: false, error: "اختر القسم الأكاديمي." };
-  if (!/^[^\s@]+@almohandes\.edu$/.test(email)) return { ok: false, error: "استخدم بريداً مؤسسياً ينتهي بـ @almohandes.edu." };
+  const domain = db().institutions[0]?.domain || "ziadelshafei.com";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !email.endsWith(`@${domain}`))
+    return { ok: false, error: `استخدم بريداً مؤسسياً ينتهي بـ @${domain}.` };
   if (db().users.some((u) => u.email.toLowerCase() === email)) return { ok: false, error: "هذا البريد مستخدم بالفعل." };
 
   const id = `tch_${Date.now().toString(36)}`;

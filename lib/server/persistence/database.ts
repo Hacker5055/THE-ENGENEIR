@@ -94,7 +94,7 @@ function migrate(sqlite: DatabaseSync) {
 
 export function databasePath(): string {
   const configured = process.env.AM_DB_PATH?.trim();
-  if (!configured) return resolve(process.cwd(), ".data", "almohandes.db");
+  if (!configured) return resolve(process.cwd(), ".data", "ziadelshafei.db");
   return isAbsolute(configured) ? configured : resolve(process.cwd(), configured);
 }
 

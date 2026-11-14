@@ -1,4 +1,4 @@
-/* Shared domain types for AL MOHANDES. Mirrors the PostgreSQL schema in /db. */
+/* Shared domain types for ZIAD EL-SHAFEI. Mirrors the PostgreSQL schema in /db. */
 
 export type Locale = "ar" | "en";
 export type Theme = "dark" | "light";

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">المهندس</string>
-    <string name="app_name_latin">AL MOHANDES</string>
+    <string name="app_name">زياد الشافعي</string>
+    <string name="app_name_latin">ZIAD EL-SHAFEI</string>
 
     <string name="server_title">عنوان الخادم</string>
-    <string name="server_message">أدخل عنوان منصّة المهندس التي يتصل بها التطبيق (مثال: https://almohandes.edu). يمكنك تغييره لاحقاً من شاشة الخطأ.</string>
-    <string name="server_hint">https://almohandes.edu</string>
+    <string name="server_message">أدخل عنوان منصّة زياد الشافعي التي يتصل بها التطبيق (مثال: https://ziadelshafei.com). يمكنك تغييره لاحقاً من شاشة الخطأ.</string>
+    <string name="server_hint">https://ziadelshafei.com</string>
     <string name="server_save">اتصال</string>
 
     <string name="error_title">تعذّر الوصول إلى المنصة</string>

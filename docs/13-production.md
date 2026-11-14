@@ -55,10 +55,10 @@ systemctl enable --now almohandes   # ExecStart=/usr/bin/npm run start
 ```bash
 node scripts/backup-db.mjs --out /backups            # نسخة متسقة أثناء العمل
 # جدولة يومية:
-0 2 * * * cd /srv/almohandes && node scripts/backup-db.mjs --out /backups >> /var/log/almohandes-backup.log 2>&1
+0 2 * * * cd /srv/almohandes && node scripts/backup-db.mjs --out /backups >> /var/log/ziadelshafei-backup.log 2>&1
 ```
 
-الاستعادة: أوقف الخدمة، استبدل `/data/almohandes.db` بأحدث نسخة، أعد التشغيل. احتفظ بالنسخ **خارج** الخادم (S3/Drive) لأنها تحتوي بيانات الطلاب.
+الاستعادة: أوقف الخدمة، استبدل `/data/ziadelshafei.db` بأحدث نسخة، أعد التشغيل. احتفظ بالنسخ **خارج** الخادم (S3/Drive) لأنها تحتوي بيانات الطلاب.
 
 ## 5) الصيانة
 

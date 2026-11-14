@@ -52,7 +52,7 @@ export default async function StudentProfilePage() {
           <p className="mb-2 text-[11px] font-semibold text-fg">{l("البيانات الأكاديمية", "Academic record")}</p>
           <dl className="space-y-1.5 text-[10.5px]">
             {[
-              [l("المؤسسة", "Institution"), l("أكاديمية المهندس للهندسة والتكنولوجيا", "AL MOHANDES Academy")],
+              [l("المؤسسة", "Institution"), l("منصة مستر زياد الشافعي", "ZIAD EL-SHAFEI Academy")],
               [l("القسم", "Department"), l(department.nameAr, department.nameEn)],
               [l("الشعبة", "Section"), sectionName],
               [l("المرشد الأكاديمي", "Academic advisor"), advisor?.nameAr ?? "—"],
