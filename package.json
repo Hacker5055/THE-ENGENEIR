@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit",
     "smoke": "node scripts/smoke.mjs",
+    "doctor": "node scripts/doctor.mjs",
     "docs:export": "tsc lib/docs.ts --outDir /tmp/am-docs --module commonjs --target es2020 --skipLibCheck && node scripts/export-docs.mjs /tmp/am-docs/docs.js"
   },
   "engines": {

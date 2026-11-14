@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">المهندس</string>
+    <string name="app_name_latin">AL MOHANDES</string>
+
+    <string name="server_title">عنوان الخادم</string>
+    <string name="server_message">أدخل عنوان منصّة المهندس التي يتصل بها التطبيق (مثال: https://almohandes.edu). يمكنك تغييره لاحقاً من شاشة الخطأ.</string>
+    <string name="server_hint">https://almohandes.edu</string>
+    <string name="server_save">اتصال</string>
+
+    <string name="error_title">تعذّر الوصول إلى المنصة</string>
+    <string name="error_body">تأكد من اتصال الإنترنت، أو غيّر عنوان الخادم إذا كانت المنصة منشورة على نطاق آخر.</string>
+    <string name="retry">إعادة المحاولة</string>
+    <string name="change_server">تغيير عنوان الخادم</string>
+
+    <string name="download_started">جارٍ تنزيل الملف…</string>
+    <string name="no_app_for_link">لا يوجد تطبيق لفتح هذا الرابط</string>
+    <string name="cancel">إلغاء</string>
+</resources>

@@ -18,9 +18,10 @@
 | أدوار | **5** | طالب · معلم · مدير مؤسسة · مراقب اختبارات · مدير منصة |
 | أسطر شيفرة تطبيقية | **~21,800** | `app/` + `components/` + `lib/` |
 | مستندات | **11 + README** | `docs/` + `openapi.yaml` + `db/` + `brand/` |
-| حزمة التثبيت | حزمة واحدة في الجذر (بلا workspaces) + قفل واحد | `package.json` · `package-lock.json` |
+| حزمة التثبيت | حزمة واحدة في الجذر (بلا workspaces) + قفل شامل لكل منصات البناء | `package.json` · `package-lock.json` · `.nvmrc` |
 | إنشاء السجلات | إضافة طالب/معلم من الواجهة + REST (`POST /api/v1/students|teachers`) بحساب دخول فعلي | `lib/server/registry.ts` |
 | بحث شامل | ⌘K في كل بوابة + صفحة بحث في تطبيق الطالب | `app/api/v1/search` · `components/student/student-search.tsx` |
+| تطبيق أندرويد | غلاف أصلي + GitHub Actions يبني APK (تحقّق: تشغيل ناجح) | `android/` · `.github/workflows/android-apk.yml` |
 | جاهزية الويب | Sitemap · robots · web manifest · Open Graph | `app/sitemap.ts` · `robots.ts` · `manifest.ts` |
 
 ---
