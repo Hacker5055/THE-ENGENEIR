@@ -1,6 +1,6 @@
 # حالة التسليم · Delivery Status — المهندس / AL MOHANDES
 
-> آخر تحقّق آلي: **2026-11-13** — `node scripts/smoke.mjs` → **41/41 ✅**
+> آخر تحقّق آلي: **2026-11-13** — `node scripts/smoke.mjs` → **42/42 ✅**
 > هذا الملف يُحدَّث بأرقام حقيقية مقروءة من الشيفرة، ولا يحتوي أي ادعاء غير مُتحقَّق منه.
 
 ---
@@ -91,7 +91,7 @@ node scripts/smoke.mjs  # 27 فحصاً — BASE_URL=http://127.0.0.1:3000 اف�
 مخرجات آخر تشغيل:
 
 ```
-41/41 checks passed
+42/42 checks passed
 ```
 
 ---
@@ -112,5 +112,5 @@ node scripts/smoke.mjs  # 27 فحصاً — BASE_URL=http://127.0.0.1:3000 اف�
 ## 8. الحالة
 
 - الفرع: `arena/c8131613-the-engeneir` · طلب الدمج: **#1**
-- `npx tsc --noEmit`: نظيف · `npm run build`: ناجح · `node scripts/smoke.mjs`: **41/41**
+- `npx tsc --noEmit`: نظيف · `npm run build`: ناجح · `node scripts/smoke.mjs`: **42/42**
 - الخطوة الوحيدة المتبقية على المستخدم: فتح المعاينة في **تبويب مستقل** وتحديثها بقوة (تحديث كامل) لالتقاط الكوكي خارج الـ iframe.

@@ -312,6 +312,15 @@ if (sessions.student) {
 
   if (startBody.attemptId) {
     const id = startBody.attemptId;
+
+    // The exam room itself must render server-side for the live attempt.
+    const room = await req(`/exam/${id}`, { cookie: sessions.student });
+    const roomHtml = room.status === 200 ? await room.text() : "";
+    check(
+      "exam: the exam room renders for a live attempt",
+      room.status === 200 && roomHtml.length > 5000 && (roomHtml.includes("تسليم") || roomHtml.includes("submit")),
+      `status ${room.status} · ${roomHtml.length}B`,
+    );
     const save = (revision) =>
       req(`/api/v1/exam/attempts/${id}/answer`, {
         method: "POST",
