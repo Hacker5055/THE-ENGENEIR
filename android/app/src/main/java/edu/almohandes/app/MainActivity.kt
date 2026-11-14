@@ -147,7 +147,7 @@ class MainActivity : AppCompatActivity() {
         binding.webView.webChromeClient = object : WebChromeClient() {
             override fun onPermissionRequest(request: PermissionRequest) {
                 pendingPermissionRequest = request
-                val wanted = mutableListOf<Manifest.permission>()
+                val wanted = mutableListOf<String>()
                 if (request.resources.contains(PermissionRequest.RESOURCE_VIDEO_CAPTURE)) {
                     wanted.add(Manifest.permission.CAMERA)
                 }
