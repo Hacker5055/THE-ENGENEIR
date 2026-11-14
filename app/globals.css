@@ -1,0 +1,296 @@
+@import "tailwindcss";
+
+/* ============================================================================
+   AL MOHANDES — Design Tokens
+   Single source of truth for colour, type, spacing, radius, elevation & motion.
+   ========================================================================== */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* ---- Brand palette --------------------------------------------------- */
+  --color-navy-950: #0a1220;
+  --color-navy-900: #101b2d;
+  --color-navy-850: #152338;
+  --color-navy-800: #192b45;
+  --color-navy-700: #22334d;
+  --color-navy-600: #2c4060;
+  --color-navy-500: #3a5279;
+
+  --color-brand-50: #eaf1fd;
+  --color-brand-100: #d3e2fb;
+  --color-brand-200: #a9c5f6;
+  --color-brand-300: #7aa4ef;
+  --color-brand-400: #4d82e6;
+  --color-brand-500: #2864d9;
+  --color-brand-600: #1f52b8;
+  --color-brand-700: #194191;
+  --color-brand-800: #14336f;
+  --color-brand-900: #0f2650;
+
+  --color-accent-100: #dbefff;
+  --color-accent-300: #86c9ff;
+  --color-accent-400: #5eb6ff;
+  --color-accent-500: #38a5ff;
+  --color-accent-600: #1a86e0;
+
+  --color-success-100: #d3f5ea;
+  --color-success-500: #19b88a;
+  --color-success-600: #119c74;
+
+  --color-warn-100: #fdf0d8;
+  --color-warn-500: #f2a93b;
+  --color-warn-600: #d38c1f;
+
+  --color-danger-100: #fde0e0;
+  --color-danger-500: #f05252;
+  --color-danger-600: #d63b3b;
+
+  /* ---- Semantic surfaces (theme-aware) --------------------------------- */
+  --color-bg: var(--am-bg);
+  --color-bg-elevated: var(--am-bg-elevated);
+  --color-surface: var(--am-surface);
+  --color-surface-2: var(--am-surface-2);
+  --color-surface-3: var(--am-surface-3);
+  --color-line: var(--am-line);
+  --color-line-strong: var(--am-line-strong);
+  --color-fg: var(--am-fg);
+  --color-fg-soft: var(--am-fg-soft);
+  --color-fg-muted: var(--am-fg-muted);
+  --color-fg-inverse: var(--am-fg-inverse);
+  --color-brand: var(--am-brand);
+  --color-brand-soft: var(--am-brand-soft);
+  --color-focus: var(--am-focus);
+
+  /* ---- Typography ------------------------------------------------------ */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-arabic: "IBM Plex Sans Arabic", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "SFMono-Regular", ui-monospace, "Cascadia Mono", Menlo, monospace;
+
+  --text-display: 2.5rem;
+  --text-display--line-height: 1.15;
+  --text-display--letter-spacing: -0.02em;
+  --text-h1: 1.875rem;
+  --text-h1--line-height: 1.25;
+  --text-h1--letter-spacing: -0.015em;
+  --text-h2: 1.375rem;
+  --text-h2--line-height: 1.35;
+  --text-h3: 1.0625rem;
+  --text-h3--line-height: 1.45;
+  --text-label: 0.8125rem;
+  --text-label--line-height: 1.4;
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1.45;
+
+  /* ---- Radius ---------------------------------------------------------- */
+  --radius-xs: 6px;
+  --radius-sm: 9px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 26px;
+  --radius-3xl: 32px;
+
+  /* ---- Elevation ------------------------------------------------------- */
+  --shadow-xs: 0 1px 2px rgba(10, 18, 32, 0.06);
+  --shadow-sm: 0 1px 3px rgba(10, 18, 32, 0.08), 0 1px 2px rgba(10, 18, 32, 0.04);
+  --shadow-md: 0 6px 16px -6px rgba(10, 18, 32, 0.22), 0 2px 6px -2px rgba(10, 18, 32, 0.12);
+  --shadow-lg: 0 18px 40px -18px rgba(10, 18, 32, 0.35), 0 6px 14px -8px rgba(10, 18, 32, 0.18);
+  --shadow-glow: 0 0 0 1px rgba(56, 165, 255, 0.18), 0 12px 40px -18px rgba(40, 100, 217, 0.6);
+  --shadow-device: 0 50px 90px -30px rgba(4, 10, 20, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.06);
+
+  /* ---- Motion ---------------------------------------------------------- */
+  --ease-brand: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --animate-fade-up: fade-up 0.35s var(--ease-brand) both;
+  --animate-fade-in: fade-in 0.25s ease-out both;
+  --animate-scale-in: scale-in 0.2s var(--ease-brand) both;
+  --animate-pulse-ring: pulse-ring 2s ease-out infinite;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-scan: scan 2.4s ease-in-out infinite;
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes pulse-ring {
+  0% { transform: scale(0.92); opacity: 0.7; }
+  70% { transform: scale(1.25); opacity: 0; }
+  100% { opacity: 0; }
+}
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+@keyframes scan {
+  0%, 100% { transform: translateY(-46%); opacity: 0.25; }
+  50% { transform: translateY(46%); opacity: 0.9; }
+}
+
+/* ============================================================================
+   Theme definitions
+   ========================================================================== */
+:root,
+html.dark {
+  --am-bg: #101b2d;
+  --am-bg-elevated: #142338;
+  --am-surface: #192b45;
+  --am-surface-2: #22334d;
+  --am-surface-3: #2a3d59;
+  --am-line: rgba(255, 255, 255, 0.08);
+  --am-line-strong: rgba(255, 255, 255, 0.16);
+  --am-fg: #eef3fa;
+  --am-fg-soft: #c8d4e5;
+  --am-fg-muted: #93a4bc;
+  --am-fg-inverse: #101b2d;
+  --am-brand: #2864d9;
+  --am-brand-soft: rgba(40, 100, 217, 0.16);
+  --am-focus: #5eb6ff;
+  --am-grid: rgba(255, 255, 255, 0.045);
+  color-scheme: dark;
+}
+
+html.light {
+  --am-bg: #f3f6fa;
+  --am-bg-elevated: #ffffff;
+  --am-surface: #ffffff;
+  --am-surface-2: #f7f9fc;
+  --am-surface-3: #eef2f8;
+  --am-line: rgba(23, 36, 58, 0.09);
+  --am-line-strong: rgba(23, 36, 58, 0.16);
+  --am-fg: #17243a;
+  --am-fg-soft: #33455f;
+  --am-fg-muted: #5f6e83;
+  --am-fg-inverse: #ffffff;
+  --am-brand: #2864d9;
+  --am-brand-soft: rgba(40, 100, 217, 0.09);
+  --am-focus: #1f52b8;
+  --am-grid: rgba(23, 36, 58, 0.05);
+  color-scheme: light;
+}
+
+/* ============================================================================
+   Base
+   ========================================================================== */
+@layer base {
+  * {
+    border-color: var(--am-line);
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+  body {
+    background: var(--am-bg);
+    color: var(--am-fg);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv02", "cv03", "cv04", "ss01";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  html[lang="ar"] body {
+    font-family: var(--font-arabic);
+  }
+  html[lang="ar"] {
+    --font-sans: var(--font-arabic);
+  }
+  ::selection {
+    background: rgba(40, 100, 217, 0.35);
+    color: var(--am-fg);
+  }
+  :focus-visible {
+    outline: 2px solid var(--am-focus);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  /* Tabular numbers for metrics & tables */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+  input, textarea, select, button {
+    font: inherit;
+    color: inherit;
+  }
+  /* Remove native number-input spinners for a cleaner field */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
+/* ============================================================================
+   Utilities
+   ========================================================================== */
+@utility container-app {
+  width: 100%;
+  margin-inline: auto;
+  max-width: 1440px;
+  padding-inline: 1rem;
+  @media (min-width: 768px) { padding-inline: 1.75rem; }
+  @media (min-width: 1280px) { padding-inline: 2.25rem; }
+}
+
+@utility app-grid-bg {
+  background-image:
+    linear-gradient(to right, var(--am-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--am-grid) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+@utility scroll-slim {
+  scrollbar-width: thin;
+  scrollbar-color: var(--am-line-strong) transparent;
+  &::-webkit-scrollbar { width: 8px; height: 8px; }
+  &::-webkit-scrollbar-thumb {
+    background: var(--am-line-strong);
+    border-radius: 999px;
+  }
+  &::-webkit-scrollbar-track { background: transparent; }
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+@utility glass-panel {
+  background: color-mix(in srgb, var(--am-surface) 82%, transparent);
+  backdrop-filter: blur(14px) saturate(1.2);
+}
+
+@utility text-gradient-brand {
+  background: linear-gradient(100deg, #eef3fa 10%, #86c9ff 55%, #38a5ff 92%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility tap {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Device frame for desktop previews of the student mobile app */
+@utility device-device {
+  box-shadow: var(--shadow-device);
+}
+
+@media print {
+  html, body { background: #fff !important; color: #111 !important; }
+  .no-print { display: none !important; }
+  .print-page { box-shadow: none !important; border: none !important; }
+  @page { size: A4; margin: 14mm; }
+}

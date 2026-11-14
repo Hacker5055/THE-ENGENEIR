@@ -1,0 +1,10 @@
+import * as fk from "fontkit";
+const fontkit = fk.default ?? fk;
+const font = fontkit.openSync("node_modules/@fontsource/ibm-plex-sans-arabic/files/ibm-plex-sans-arabic-arabic-600-normal.woff2");
+console.log("unitsPerEm", font.unitsPerEm, "ascent", font.ascent, "descent", font.descent);
+const run = font.layout("م");
+const g = run.glyphs[0];
+console.log("glyph", g.id, "advance", g.advanceWidth, "bbox", g.bbox);
+const path = g.path.toSVG();
+console.log(path.slice(0, 400));
+console.log("len", path.length);
