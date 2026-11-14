@@ -9,9 +9,10 @@
 
 import "server-only";
 import { cookies, headers } from "next/headers";
+import { ROLE_PASSWORD, hashPassword, verifyPassword } from "./credentials";
 import { ROLE_HOME } from "@/lib/route-guard";
 import { redirect } from "next/navigation";
-import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import type { Permission, Role, SessionUser } from "@/lib/types";
@@ -40,17 +41,8 @@ export async function cookieSecure(): Promise<boolean> {
 const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
 
 /* --------------------------- password hashing --------------------------- */
-function hash(password: string, salt = randomBytes(16).toString("hex")) {
-  return `${salt}:${scryptSync(password, salt, 64).toString("hex")}`;
-}
-
-function verify(password: string, stored: string) {
-  const [salt, key] = stored.split(":");
-  if (!salt || !key) return false;
-  const candidate = scryptSync(password, salt, 64);
-  const expected = Buffer.from(key, "hex");
-  return candidate.length === expected.length && timingSafeEqual(candidate, expected);
-}
+const hash = hashPassword;
+const verify = verifyPassword;
 
 let bootstrapped = false;
 function bootstrapAccounts() {
@@ -62,13 +54,6 @@ function bootstrapAccounts() {
   }
   // Seeded teachers and students share a role-based demo password so every
   // record in the dataset can be inspected while signed in as that person.
-  const ROLE_PASSWORD: Record<Role, string> = {
-    STUDENT: "Student@123",
-    TEACHER: "Teacher@123",
-    EXAM_SUPERVISOR: "Super@123",
-    INSTITUTION_ADMIN: "Admin@123",
-    SUPER_ADMIN: "Root@123",
-  };
   for (const u of users) {
     if (!u.passwordHash) u.passwordHash = hash(ROLE_PASSWORD[u.role]);
   }

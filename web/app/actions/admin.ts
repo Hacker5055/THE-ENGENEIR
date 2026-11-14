@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireRole, requireUser } from "@/lib/server/auth";
 import { db, findAttempt, findExam, findStudent, notify, pushAudit } from "@/lib/server/store";
+import { createStudentRecord, createTeacherRecord } from "@/lib/server/registry";
 import { gradeAttempt, recordEvent } from "@/lib/server/exam";
 import type { ComplaintStatus, ExamEventType } from "@/lib/types";
 
@@ -486,4 +487,46 @@ export async function saveInstitutionSettings(formData: FormData) {
 
   revalidatePath("/admin/settings");
   redirect("/admin/settings?saved=1");
+}
+
+/* --------------------------------------------------------------------------
+   Registry: create students and teachers (thin wrappers over lib/server/registry)
+   -------------------------------------------------------------------------- */
+
+export interface RegistryState {
+  error?: string;
+  ok?: { number: string; email: string; password: string };
+}
+
+export async function createStudentAction(_prev: RegistryState, formData: FormData): Promise<RegistryState> {
+  const user = await requireRole(["INSTITUTION_ADMIN", "SUPER_ADMIN"]);
+  const result = createStudentRecord(user, {
+    nameAr: String(formData.get("nameAr") ?? ""),
+    nameEn: String(formData.get("nameEn") ?? ""),
+    departmentId: String(formData.get("departmentId") ?? ""),
+    level: Number(formData.get("level") ?? 1),
+    phone: String(formData.get("phone") ?? ""),
+    nationalId: String(formData.get("nationalId") ?? ""),
+  });
+  if (!result.ok) return { error: result.error };
+
+  revalidatePath("/admin/students");
+  return { ok: { number: result.number, email: result.email, password: result.password } };
+}
+
+export async function createTeacherAction(_prev: RegistryState, formData: FormData): Promise<RegistryState> {
+  const user = await requireRole(["INSTITUTION_ADMIN", "SUPER_ADMIN"]);
+  const result = createTeacherRecord(user, {
+    nameAr: String(formData.get("nameAr") ?? ""),
+    nameEn: String(formData.get("nameEn") ?? ""),
+    title: String(formData.get("title") ?? ""),
+    departmentId: String(formData.get("departmentId") ?? ""),
+    email: String(formData.get("email") ?? ""),
+    courseIds: formData.getAll("courseIds").map(String),
+  });
+  if (!result.ok) return { error: result.error };
+
+  revalidatePath("/admin/teachers");
+  revalidatePath("/admin/courses");
+  return { ok: { number: result.number, email: result.email, password: result.password } };
 }

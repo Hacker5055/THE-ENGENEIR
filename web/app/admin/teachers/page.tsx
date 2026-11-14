@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Avatar, Badge, Card, EmptyState, Icon, Progress, SearchInput } from "@/components/ui";
 import { PageHeader, StatCard, ToolbarBar } from "@/components/shells/app-shell";
+import { CreateTeacherButton } from "@/components/admin/create-registry-dialog";
 import { db, findDepartment } from "@/lib/server/store";
 import { adminContext } from "@/lib/server/context";
 import { makeL } from "@/lib/utils";
@@ -28,6 +29,12 @@ export default async function AdminTeachersPage({ searchParams }: { searchParams
         title={l("هيئة التدريس", "Faculty")}
         subtitle={l("الأعباء التدريسية، التقييم، وحالة الأعضاء", "Teaching load, ratings, and member status")}
         breadcrumb={[{ label: l("الشؤون الأكاديمية", "Academics") }, { label: l("المعلمون", "Faculty") }]}
+        actions={
+          <CreateTeacherButton
+            departments={db().departments.map((d) => ({ id: d.id, nameAr: d.nameAr, nameEn: d.nameEn }))}
+            courses={db().courses.map((c) => ({ id: c.id, code: c.code, nameAr: c.nameAr, nameEn: c.nameEn }))}
+          />
+        }
       />
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

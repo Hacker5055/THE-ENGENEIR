@@ -167,6 +167,66 @@ check(
   `${blocked.status} → ${blocked.headers.get("location")}`,
 );
 
+// Registry writes: an admin-created student can actually sign in afterwards.
+if (sessions.admin) {
+  const uniq = Date.now().toString(36).slice(-5);
+  const created = await req("/api/v1/students", {
+    method: "POST",
+    body: JSON.stringify({
+      nameAr: `طالب اختبار ${uniq}`,
+      nameEn: `Smoke Student ${uniq}`,
+      departmentId: "dept_cs",
+      level: 2,
+    }),
+    cookie: sessions.admin,
+    headers: { "content-type": "application/json" },
+  });
+  const createdBody = await created.json().catch(() => ({}));
+  check("registry: admin creates a student", created.status === 201 && Boolean(createdBody.studentNumber), `${created.status} ${createdBody.message ?? ""}`);
+
+  if (createdBody.email && createdBody.temporaryPassword) {
+    const login = await signIn(createdBody.email, createdBody.temporaryPassword);
+    check("registry: the new student can sign in with 2FA", login.ok, login.reason);
+  } else {
+    check("registry: the new student can sign in with 2FA", false, "no credentials returned");
+  }
+
+  const forbidden = await req("/api/v1/students", {
+    method: "POST",
+    body: JSON.stringify({ nameAr: "x", nameEn: "y", departmentId: "dept_cs", level: 1 }),
+    cookie: sessions.student,
+    headers: { "content-type": "application/json" },
+  });
+  check("registry: a student cannot create students", forbidden.status === 403, `status ${forbidden.status}`);
+
+  const teacher = await req("/api/v1/teachers", {
+    method: "POST",
+    body: JSON.stringify({
+      nameAr: `د. اختبار ${uniq}`,
+      nameEn: `Smoke Teacher ${uniq}`,
+      departmentId: "dept_cs",
+      email: `smoke.${uniq}@almohandes.edu`,
+    }),
+    cookie: sessions.admin,
+    headers: { "content-type": "application/json" },
+  });
+  const teacherBody = await teacher.json().catch(() => ({}));
+  check("registry: admin creates a teacher account", teacher.status === 201 && Boolean(teacherBody.email), `${teacher.status}`);
+
+  const duplicate = await req("/api/v1/teachers", {
+    method: "POST",
+    body: JSON.stringify({
+      nameAr: `مكرر ${uniq}`,
+      nameEn: `Duplicate ${uniq}`,
+      departmentId: "dept_cs",
+      email: `smoke.${uniq}@almohandes.edu`,
+    }),
+    cookie: sessions.admin,
+    headers: { "content-type": "application/json" },
+  });
+  check("registry: duplicate e-mail is rejected", duplicate.status === 422, `status ${duplicate.status}`);
+}
+
 // Public card verification (what the QR on the student ID opens).
 const card = await req("/verify/AM20261042", { cookie: jar() });
 const cardHtml = card.status === 200 ? await card.text() : "";

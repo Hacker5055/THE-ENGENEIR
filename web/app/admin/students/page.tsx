@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Avatar, Badge, Card, EmptyState, Icon, Progress, SearchInput, Select, TableWrap, Td, Th } from "@/components/ui";
 import { PageHeader, StatCard, ToolbarBar } from "@/components/shells/app-shell";
+import { CreateStudentButton } from "@/components/admin/create-registry-dialog";
 import { db, findDepartment, studentAttendance } from "@/lib/server/store";
 import { adminContext } from "@/lib/server/context";
 import { makeL } from "@/lib/utils";
@@ -38,7 +39,12 @@ export default async function AdminStudentsPage({ searchParams }: { searchParams
         title={l("سجل الطلاب", "Student registry")}
         subtitle={l("بحث، تصفية، ومتابعة الحالة الأكاديمية والحضور", "Search, filter, and track standing and attendance")}
         breadcrumb={[{ label: l("الشؤون الأكاديمية", "Academics") }, { label: l("الطلاب", "Students") }]}
-        actions={<Badge tone="neutral">{all.length} {l("طالباً", "students")}</Badge>}
+        actions={
+          <div className="flex items-center gap-2">
+            <Badge tone="neutral">{all.length} {l("طالباً", "students")}</Badge>
+            <CreateStudentButton departments={db().departments.map((d) => ({ id: d.id, nameAr: d.nameAr, nameEn: d.nameEn }))} />
+          </div>
+        }
       />
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
