@@ -61,6 +61,9 @@ const wanted = {
   "win32-x64": ["@next/swc-win32-x64-msvc", "@tailwindcss/oxide-win32-x64-msvc"],
 }[family];
 
+const depsInstalled = existsSync(join(root, "node_modules"));
+if (!depsInstalled) info("node_modules is absent — run `npm ci` before the build");
+
 if (!wanted) {
   info(`No native-binary checklist for ${family} — continuing`);
 } else {
@@ -68,6 +71,7 @@ if (!wanted) {
     const inLock = Boolean(lock?.packages?.[`node_modules/${dep}`]);
     const installed = existsSync(join(root, "node_modules", dep));
     if (inLock && installed) ok(`native binary ${dep}`);
+    else if (inLock && !depsInstalled) info(`native binary ${dep} — will install with \`npm ci\``);
     else if (inLock) bad(`native binary ${dep}`, "in the lockfile but not installed — run `npm ci` again");
     else bad(`native binary ${dep}`, "missing from package-lock.json — the build will fail on this platform");
   }
