@@ -1,6 +1,6 @@
 # حالة التسليم · Delivery Status — المهندس / AL MOHANDES
 
-> آخر تحقّق آلي: **2026-11-13** — `node scripts/smoke.mjs` → **42/42 ✅**
+> آخر تحقّق آلي: **2026-11-14** — `node scripts/smoke.mjs` → **42/42 ✅** · `npm run build` ✅ · `npm run doctor` ✅ · إعادة تشغيل الخادم مع بقاء البيانات والجلسات ✅
 > هذا الملف يُحدَّث بأرقام حقيقية مقروءة من الشيفرة، ولا يحتوي أي ادعاء غير مُتحقَّق منه.
 
 ---
@@ -23,6 +23,11 @@
 | بحث شامل | ⌘K في كل بوابة + صفحة بحث في تطبيق الطالب | `app/api/v1/search` · `components/student/student-search.tsx` |
 | تطبيق أندرويد | غلاف أصلي + GitHub Actions يبني APK (تحقّق: تشغيل ناجح) | `android/` · `.github/workflows/android-apk.yml` |
 | جاهزية الويب | Sitemap · robots · web manifest · Open Graph | `app/sitemap.ts` · `robots.ts` · `manifest.ts` |
+| تخزين دائم | SQLite عبر `node:sqlite` (WAL، معاملات متزامنة، بلا حزم أصلية) | `lib/server/persistence/*` |
+| حسابات إنتاجية | مدير أول من متغيرات البيئة · كلمات مرور مؤقتة عشوائية · إلزام التغيير | `lib/server/bootstrap.ts` · `registry.ts` |
+| بريد واستعادة | تحقق ثنائي بالبريد (Gmail/SMTP) · رابط استعادة صالح ساعة ولمرة واحدة | `lib/server/mail.ts` · `app/actions/account.ts` |
+| أمان تشغيلي | حد 8 محاولات/15 دقيقة · رؤوس أمان · `/api/health` · نسخ احتياطي | `lib/server/auth.ts` · `next.config.mjs` · `scripts/backup-db.mjs` |
+| نشر | `Dockerfile` + `docker-compose.yml` + `.env.example` + دليل تشغيل | `docs/13-production.md` |
 
 ---
 

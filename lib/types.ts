@@ -499,4 +499,6 @@ export interface SessionUser {
   teacherId?: string;
   avatarHue: number;
   title?: string;
+  /** Set when an administrator issued a temporary password. */
+  mustChangePassword?: boolean;
 }

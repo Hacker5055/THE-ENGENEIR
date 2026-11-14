@@ -225,7 +225,11 @@ export interface Database {
   complaints: Complaint[];
   auditLogs: AuditLog[];
   roles: RoleDefinition[];
-  users: (SessionUser & { passwordHash: string })[];
+  users: (SessionUser & {
+    passwordHash: string;
+    passwordChangedAt?: number;
+    mustChangePassword?: boolean;
+  })[];
   lectureNotes: LectureNote[];
   settings: InstitutionSettings;
   studentPrefs: Record<string, StudentNotificationPrefs>;

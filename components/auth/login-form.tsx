@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { loginAction, type LoginState } from "@/app/actions/auth";
+import { requestResetAction, type ResetRequestState } from "@/app/actions/account";
 import { Button, Field, Input, Modal, Alert, Badge } from "@/components/ui";
 import { Icon } from "@/components/icons";
 import { usePrefs } from "@/components/providers";
@@ -12,14 +13,23 @@ import { cx } from "@/lib/utils";
 
 const ROLE_ORDER = ["STUDENT", "TEACHER", "INSTITUTION_ADMIN", "EXAM_SUPERVISOR", "SUPER_ADMIN"] as const;
 
-export function LoginForm({ initialEmail, next }: { initialEmail?: string; next?: string }) {
+export function LoginForm({
+  initialEmail,
+  next,
+  demo = false,
+}: {
+  initialEmail?: string;
+  next?: string;
+  /** Demo accounts are a development/training aid, never shown in production. */
+  demo?: boolean;
+}) {
   const { l } = usePrefs();
   const [state, action] = useActionState<LoginState, FormData>(loginAction, {});
   const [email, setEmail] = useState(initialEmail ?? "");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [forgot, setForgot] = useState(false);
-  const [forgotSent, setForgotSent] = useState(false);
+  const [resetState, resetAction] = useActionState<ResetRequestState, FormData>(requestResetAction, {});
 
   const useDemo = (cred: (typeof DEMO_CREDENTIALS)[number]) => {
     setEmail(cred.email);
@@ -102,6 +112,8 @@ export function LoginForm({ initialEmail, next }: { initialEmail?: string; next?
           </p>
         </form>
 
+        {demo && (
+          <>
         <div className="my-5 flex items-center gap-3">
           <span className="h-px flex-1 bg-line" />
           <span className="text-[10.5px] font-medium uppercase tracking-wider text-fg-muted">{l("حسابات تجريبية", "Demo accounts")}</span>
@@ -141,6 +153,9 @@ export function LoginForm({ initialEmail, next }: { initialEmail?: string; next?
           )}
         </p>
 
+          </>
+        )}
+
         <div className="mt-5 flex items-center justify-center gap-3 text-[11px]">
           <Link href="/" className="text-fg-muted transition hover:text-fg">{l("العودة للرئيسية", "Back to home")}</Link>
           <span className="text-line-strong">·</span>
@@ -150,33 +165,36 @@ export function LoginForm({ initialEmail, next }: { initialEmail?: string; next?
 
       <Modal
         open={forgot}
-        onClose={() => { setForgot(false); setForgotSent(false); }}
+        onClose={() => setForgot(false)}
         title={l("استعادة كلمة المرور", "Reset your password")}
-        description={l("سنرسل رابط استعادة صالحاً لـ15 دقيقة إلى بريدك المؤسسي.", "We will email a reset link valid for 15 minutes to your institutional address.")}
-        footer={
-          <>
-            <Button variant="ghost" size="sm" onClick={() => setForgot(false)}>{l("إلغاء", "Cancel")}</Button>
-            <Button size="sm" onClick={() => setForgotSent(true)} disabled={forgotSent} icon={forgotSent ? "check" : "send"}>
-              {forgotSent ? l("تم الإرسال", "Sent") : l("إرسال الرابط", "Send link")}
-            </Button>
-          </>
-        }
+        description={l(
+          "سنرسل رابطاً صالحاً لمدة ساعة إلى بريدك المؤسسي.",
+          "We will email a reset link valid for one hour to your institutional address.",
+        )}
       >
-        {forgotSent ? (
-          <Alert tone="success" title={l("تم إرسال طلب الاستعادة", "Reset requested")}>
+        {resetState.sent ? (
+          <Alert tone="success" title={l("تحقق من بريدك", "Check your inbox")}>
             {l(
-              "في هذا النموذج التجريبي لا يوجد بريد فعلي. استخدم قائمة الحسابات التجريبية للدخول.",
-              "This prototype does not send real email. Use the demo account list to sign in.",
+              "لو كان البريد مسجّلاً لدينا فسيصلك رابط إعادة التعيين خلال دقائق. الرابط صالح لساعة ولمرة واحدة.",
+              "If the address exists, a reset link arrives within minutes. It is valid for one hour and single-use.",
             )}
           </Alert>
         ) : (
-          <Field label={l("البريد المؤسسي", "Institutional email")}>
-            <Input dir="ltr" placeholder="name@almohandes.edu" defaultValue={email} />
-          </Field>
+          <form action={resetAction} className="space-y-3">
+            <Field label={l("البريد المؤسسي", "Institutional email")}>
+              <Input name="email" type="email" dir="ltr" defaultValue={email} required autoComplete="email" />
+            </Field>
+            {resetState.error && <Alert tone="danger" title={resetState.error} icon="alert-circle" />}
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <Button type="button" variant="ghost" size="sm" onClick={() => setForgot(false)}>
+                {l("إلغاء", "Cancel")}
+              </Button>
+              <Button type="submit" size="sm" icon="send">
+                {l("إرسال الرابط", "Send link")}
+              </Button>
+            </div>
+          </form>
         )}
-        <div className="mt-4">
-          <Badge tone="neutral" icon="info">{l("الاستعادة الحقيقية تتطلب خدمة بريد مُهيّأة", "Real reset requires a configured mail service")}</Badge>
-        </div>
       </Modal>
     </>
   );

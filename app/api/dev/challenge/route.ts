@@ -23,5 +23,6 @@ export async function POST(req: Request) {
 
   const result = await startSignIn(body.email, body.password);
   if (!result.ok) return NextResponse.json({ error: "INVALID_CREDENTIALS" }, { status: 401 });
+  if (result.kind === "SESSION") return NextResponse.json({ ok: true, session: true });
   return NextResponse.json({ ok: true, challengeId: result.challengeId, code: result.demoCode });
 }
