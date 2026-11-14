@@ -12,8 +12,8 @@
 
 _Stack_
 
-- Next.js 15 App Router — مكونات خادم للقراءة، وServer Actions للكتابة.
-  <br>_Next.js 15 App Router — server components for reads, server actions for writes._
+- Next.js 16 App Router — مكونات خادم للقراءة، وServer Actions للكتابة.
+  <br>_Next.js 16 App Router — server components for reads, server actions for writes._
 - PostgreSQL 16 + Prisma/‏SQL مباشر — معاملات صريحة حول كل تغيير مالي أو أكاديمي.
   <br>_PostgreSQL 16 with Prisma or raw SQL — explicit transactions around every academic or graded change._
 - جلسات الخادم: في هذه النسخة تُحفظ في ملف حالة (`.data/auth-state.json` بصلاحية 0600) لتبقى بعد إعادة التشغيل، وفي الإنتاج Redis أو جدول `sessions`.

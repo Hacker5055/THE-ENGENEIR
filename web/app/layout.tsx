@@ -12,6 +12,7 @@ import { PreferencesProvider, ToastProvider } from "@/components/providers";
 import { getPrefs } from "@/lib/prefs";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://almohandes.edu"),
   title: {
     default: "المهندس | AL MOHANDES — إدارة تعليمية ذكية واختبارات آمنة",
     template: "%s · المهندس",

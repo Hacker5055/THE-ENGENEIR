@@ -2,7 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { homeForRole, isRole, safeNextForRole } from "@/lib/route-guard";
 
 /**
- * Edge guard for protected surfaces.
+ * Edge guard for protected surfaces (Next 16 `proxy` convention — formerly
+ * `middleware.ts`; same runtime, same matcher).
  *
  * Page-level `requireUser()` remains the authority (it validates the session,
  * role and permissions). This middleware only short-circuits the obvious case —
@@ -12,7 +13,7 @@ import { homeForRole, isRole, safeNextForRole } from "@/lib/route-guard";
  */
 const PROTECTED = ["/admin", "/teacher", "/student", "/exam"];
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
   const session = Boolean(req.cookies.get("am_session")?.value);
   const role = req.cookies.get("am_role")?.value;

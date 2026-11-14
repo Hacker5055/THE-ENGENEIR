@@ -1,6 +1,6 @@
 # حالة التسليم · Delivery Status — المهندس / AL MOHANDES
 
-> آخر تحقّق آلي: **2026-11-13** — `node scripts/smoke.mjs` → **36/36 ✅**
+> آخر تحقّق آلي: **2026-11-13** — `node scripts/smoke.mjs` → **41/41 ✅**
 > هذا الملف يُحدَّث بأرقام حقيقية مقروءة من الشيفرة، ولا يحتوي أي ادعاء غير مُتحقَّق منه.
 
 ---
@@ -10,7 +10,7 @@
 | المكوّن | العدد | أين |
 |---|---|---|
 | شاشات (Server-rendered pages) | **63** | `web/app/**/page.tsx` |
-| مسارات API | **15** | `web/app/api/**/route.ts` (منها `/v1/exam/*`, `/v1/attendance/*`, `/v1/reports/*`, `/api/auth/*`) |
+| مسارات API | **17** | `web/app/api/**/route.ts` (منها `/v1/exam/*`, `/v1/attendance/*`, `/v1/reports/*`, `/api/auth/*`) |
 | Server Actions (كلها موصولة بواجهة) | **32** | `web/app/actions/*.ts` |
 | مكوّنات عميل | **23** | `web/components/**` |
 | وحدات منطق الخادم | **16** | `web/lib/**` |
@@ -19,6 +19,7 @@
 | أسطر شيفرة تطبيقية | **~21,800** | `app/` + `components/` + `lib/` |
 | مستندات | **11 + README** | `docs/` + `openapi.yaml` + `db/` + `brand/` |
 | حزمة التثبيت | بيان في الجذر + مساحة عمل `web` + قفل واحد | `package.json` · `package-lock.json` |
+| إنشاء السجلات | إضافة طالب/معلم من الواجهة + REST (`POST /api/v1/students|teachers`) بحساب دخول فعلي | `lib/server/registry.ts` |
 | بحث شامل | ⌘K في كل بوابة + صفحة بحث في تطبيق الطالب | `app/api/v1/search` · `components/student/student-search.tsx` |
 | جاهزية الويب | Sitemap · robots · web manifest · Open Graph | `app/sitemap.ts` · `robots.ts` · `manifest.ts` |
 
@@ -90,7 +91,7 @@ node scripts/smoke.mjs  # 27 فحصاً — BASE_URL=http://127.0.0.1:3000 اف�
 مخرجات آخر تشغيل:
 
 ```
-36/36 checks passed
+41/41 checks passed
 ```
 
 ---
@@ -104,12 +105,12 @@ node scripts/smoke.mjs  # 27 فحصاً — BASE_URL=http://127.0.0.1:3000 اف�
 | حماية الأجهزة | تعتمد على المتصفح؛ لا وكيل MDM | MDM/Proctor الموصوف في `docs/09` |
 | الإشعارات | داخل المنصة فقط | بوابة SMS/بريد |
 | لقطات شاشة | لا يوجد مُتصفّح في بيئة البناء | لقطات من متصفح حقيقي |
-| تنبيه `npm audit` (عالٍ) | `postcss` المضمَّن داخل Next 15.5.29؛ لا يمسّ مسار التشغيل الحالي | الترقية إلى Next 16 (تغيير كبير، تُنفَّذ وتُختبر منفصلة) |
+| — | لا تنبيهات أمنية: `npm audit` → **0 ثغرات** بعد الترقية إلى Next 16.4.6 | — |
 
 ---
 
 ## 8. الحالة
 
 - الفرع: `arena/c8131613-the-engeneir` · طلب الدمج: **#1**
-- `npx tsc --noEmit`: نظيف · `npm run build`: ناجح · `node scripts/smoke.mjs`: **36/36**
+- `npx tsc --noEmit`: نظيف · `npm run build`: ناجح · `node scripts/smoke.mjs`: **41/41**
 - الخطوة الوحيدة المتبقية على المستخدم: فتح المعاينة في **تبويب مستقل** وتحديثها بقوة (تحديث كامل) لالتقاط الكوكي خارج الـ iframe.

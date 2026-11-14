@@ -428,7 +428,7 @@ CREATE INDEX idx_notifications_user_unread
     blocks: [
       { t: "h2", ar: "التقنيات", en: "Stack" },
       { t: "ul", items: [
-        { ar: "Next.js 15 App Router — مكونات خادم للقراءة، وServer Actions للكتابة.", en: "Next.js 15 App Router — server components for reads, server actions for writes." },
+        { ar: "Next.js 16 App Router — مكونات خادم للقراءة، وServer Actions للكتابة.", en: "Next.js 16 App Router — server components for reads, server actions for writes." },
         { ar: "PostgreSQL 16 + Prisma/‏SQL مباشر — معاملات صريحة حول كل تغيير مالي أو أكاديمي.", en: "PostgreSQL 16 with Prisma or raw SQL — explicit transactions around every academic or graded change." },
         { ar: "جلسات الخادم: في هذه النسخة تُحفظ في ملف حالة (`.data/auth-state.json` بصلاحية 0600) لتبقى بعد إعادة التشغيل، وفي الإنتاج Redis أو جدول `sessions`.", en: "Server sessions: mirrored to a 0600 state file (`.data/auth-state.json`) so a restart does not sign everyone out; Redis or a `sessions` table in production." },
         { ar: "Redis (اختياري) لتحديات OTP والمعدّلات — قابل للاستبدال بجدول مؤقت.", en: "Redis (optional) for OTP challenges and rate limits — replaceable with a transient table." },
