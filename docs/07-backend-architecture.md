@@ -81,4 +81,4 @@ _Background jobs_
 
 ---
 
-Source of truth: `web/lib/docs.ts`. Edit there, then re-run `node scripts/export-docs.mjs`.
+Source of truth: `lib/docs.ts`. Edit there, then re-run `node scripts/export-docs.mjs`.

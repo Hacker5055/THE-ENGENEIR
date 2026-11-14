@@ -21,7 +21,7 @@ import { fileURLToPath } from "node:url";
 
 const BASE = (process.env.BASE_URL ?? "http://127.0.0.1:3000").replace(/\/$/, "");
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
-const STATE_FILE = process.env.AM_STATE_FILE ?? join(REPO, "web", ".data", "auth-state.json");
+const STATE_FILE = process.env.AM_STATE_FILE ?? join(REPO, ".data", "auth-state.json");
 
 const results = [];
 let failed = 0;

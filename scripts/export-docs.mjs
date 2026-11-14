@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * Generates docs/*.md from the single source of truth: web/lib/docs.ts.
+ * Generates docs/*.md from the single source of truth: lib/docs.ts.
  *
  * The in-app documentation pages and the repository Markdown therefore can
  * never drift apart. Run from the repository root:
  *
- *   npx tsc web/lib/docs.ts --outDir /tmp/am-docs --module commonjs \
+ *   npx tsc lib/docs.ts --outDir /tmp/am-docs --module commonjs \
  *     --target es2020 --skipLibCheck
  *   node scripts/export-docs.mjs /tmp/am-docs/docs.js
  */
@@ -75,7 +75,7 @@ for (const doc of DOCS) {
     ...doc.blocks.map(render),
     "---",
     "",
-    `Source of truth: \`web/lib/docs.ts\`. Edit there, then re-run \`node scripts/export-docs.mjs\`.`,
+    `Source of truth: \`lib/docs.ts\`. Edit there, then re-run \`node scripts/export-docs.mjs\`.`,
     "",
   ].join("\n");
 
@@ -88,7 +88,7 @@ const readme = [
   "# AL MOHANDES — Delivery documentation",
   "",
   "This folder mirrors the in-app documentation (`/docs` on the running platform).",
-  "Both are generated from `web/lib/docs.ts` so they cannot drift apart.",
+  "Both are generated from `lib/docs.ts` so they cannot drift apart.",
   "",
   "| # | المستند | Document | File |",
   "| --- | --- | --- | --- |",
@@ -100,13 +100,13 @@ const readme = [
   "| --- | --- |",
   "| PostgreSQL DDL (multi-tenant + exam engine) | [`db/schema.sql`](../db/schema.sql) |",
   "| OpenAPI 3.1 specification | [`openapi.yaml`](../openapi.yaml) |",
-  "| Permission matrix (single source) | [`web/lib/permissions.ts`](../web/lib/permissions.ts) |",
-  "| Exam engine (timer, grading, events) | [`web/lib/server/exam.ts`](../web/lib/server/exam.ts) |",
+  "| Permission matrix (single source) | [`lib/permissions.ts`](../lib/permissions.ts) |",
+  "| Exam engine (timer, grading, events) | [`lib/server/exam.ts`](../lib/server/exam.ts) |",
   "",
   "## Regenerating",
   "",
   "```bash",
-  "npx tsc web/lib/docs.ts --outDir /tmp/am-docs --module commonjs --target es2020 --skipLibCheck",
+  "npx tsc lib/docs.ts --outDir /tmp/am-docs --module commonjs --target es2020 --skipLibCheck",
   "node scripts/export-docs.mjs /tmp/am-docs/docs.js",
   "```",
   "",

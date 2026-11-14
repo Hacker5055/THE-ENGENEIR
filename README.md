@@ -30,10 +30,10 @@
 
 ## التشغيل
 
-المستودع كامل يُثبَّت ويُشغَّل **من الجذر** — لا حاجة للدخول إلى `web/`:
+المستودع كامل **حزمة واحدة** في الجذر — `npm install` ثم `npm run dev`، بلا مساحات عمل ولا مجلدات فرعية:
 
 ```bash
-npm install          # يثبّت مساحة العمل web/ (npm workspaces)
+npm install          # يثبّت كل الاعتماديات من الجذر
 npm run dev          # http://localhost:3000  (يستمع على 0.0.0.0 للعرض داخل حاويات/معاينات)
 npm run build        # بناء الإنتاج
 npm run start        # تشغيل الإنتاج
@@ -49,10 +49,11 @@ npm i -D @resvg/resvg-js fontkit     # فقط لإعادة توليد brand/*.pn
 
 ### التشغيل على منصات الاستضافة الآلية (Google AI Studio / StackBlitz / CodeSandbox)
 
-هذا التطبيق **Next.js بخادم Node** (Server Actions، Middleware، تصيير على الخادم) وليس تطبيق Vite ثابتاً. لذلك:
+هذا التطبيق **Next.js بخادم Node** (Server Actions، Proxy، تصيير على الخادم) وليس تطبيق Vite ثابتاً.
 
-- ملف `package.json` موجود الآن في **جذر المستودع** مع `web` كمساحة عمل، وملف قفل واحد `package-lock.json` في الجذر — هذا ما كان يمنع التثبيت سابقاً («Dependency installation failed») عند استيراد المستودع كاملاً، لأن الجذر لم يكن يحمل بياناً.
-- أي منصة تشغّل أمر `npm run dev` على Node ستعمل مباشرة؛ الخادم يستمع على `0.0.0.0:3000`.
+- البنية الآن **حزمة واحدة في جذر المستودع**: `package.json` + `package-lock.json` + `app/` — بلا npm workspaces وبلا مجلد `web/`. هذا هو الشكل الذي تتوقعه منصات الاستيراد الآلي، وهو ما كان يسبب «Dependency installation failed» حين كان التطبيق داخل مجلد فرعي.
+- كل اعتماديات البناء موجودة في `dependencies` (لا شيء حرج في `devDependencies`) حتى تعمل المنصات التي تثبّت بـ `--omit=dev`.
+- أي منصة تشغّل `npm run dev` على Node ≥ 20.9 ستعمل مباشرة؛ الخادم يستمع على `0.0.0.0:3000`.
 - منصة تقبل **Vite فقط** لن تشغّل هذا المشروع كما هو — استخدم معاينة Node (هذه البيئة) أو Vercel/أي مستضيف Node.
 
 ## الحسابات التجريبية
@@ -76,7 +77,10 @@ npm i -D @resvg/resvg-js fontkit     # فقط لإعادة توليد brand/*.pn
 ## خريطة المستودع
 
 ```
-web/                     التطبيق (Next.js)
+app/                     مسارات Next.js (App Router)
+lib/                     منطق الخادم والأنواع والصلاحيات
+components/              مكوّنات الواجهة
+public/brand/            أصول العلامة التجارية
 ├─ app/                  المسارات: landing · login · verify · student · teacher · admin · exam · docs · api
 ├─ components/           بدائيات الواجهة، الهياكل، مكوّنات المجال
 ├─ lib/
@@ -107,7 +111,7 @@ web/                     التطبيق (Next.js)
 | 10 | خطة التطوير | [`docs/10-roadmap.md`](docs/10-roadmap.md) |
 | 11 | استراتيجية الاختبار | [`docs/11-testing-strategy.md`](docs/11-testing-strategy.md) |
 
-نفس المحتوى متاح داخل المنصة على `/docs` (مصدر واحد: `web/lib/docs.ts`).
+نفس المحتوى متاح داخل المنصة على `/docs` (مصدر واحد: `lib/docs.ts`).
 
 ## الهوية
 
@@ -147,7 +151,7 @@ web/                     التطبيق (Next.js)
 cd web
 npm run dev              # تشغيل محلي
 npm run build            # بناء الإنتاج
-npm run docs:export      # إعادة توليد docs/*.md من web/lib/docs.ts
+npm run docs:export      # إعادة توليد docs/*.md من lib/docs.ts
 npm run typecheck        # فحص الأنواع فقط
 npm run smoke            # اختبار E2E شامل ضد خادم يعمل على :3000 (27 فحصاً)
 ```

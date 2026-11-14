@@ -9,16 +9,16 @@
 
 | المكوّن | العدد | أين |
 |---|---|---|
-| شاشات (Server-rendered pages) | **63** | `web/app/**/page.tsx` |
-| مسارات API | **17** | `web/app/api/**/route.ts` (منها `/v1/exam/*`, `/v1/attendance/*`, `/v1/reports/*`, `/api/auth/*`) |
-| Server Actions (كلها موصولة بواجهة) | **32** | `web/app/actions/*.ts` |
-| مكوّنات عميل | **23** | `web/components/**` |
-| وحدات منطق الخادم | **16** | `web/lib/**` |
-| صلاحيات مُعرَّفة | **22** | `web/lib/permissions.ts` |
+| شاشات (Server-rendered pages) | **63** | `app/**/page.tsx` |
+| مسارات API | **17** | `app/api/**/route.ts` (منها `/v1/exam/*`, `/v1/attendance/*`, `/v1/reports/*`, `/api/auth/*`) |
+| Server Actions (كلها موصولة بواجهة) | **32** | `app/actions/*.ts` |
+| مكوّنات عميل | **23** | `components/**` |
+| وحدات منطق الخادم | **16** | `lib/**` |
+| صلاحيات مُعرَّفة | **22** | `lib/permissions.ts` |
 | أدوار | **5** | طالب · معلم · مدير مؤسسة · مراقب اختبارات · مدير منصة |
 | أسطر شيفرة تطبيقية | **~21,800** | `app/` + `components/` + `lib/` |
 | مستندات | **11 + README** | `docs/` + `openapi.yaml` + `db/` + `brand/` |
-| حزمة التثبيت | بيان في الجذر + مساحة عمل `web` + قفل واحد | `package.json` · `package-lock.json` |
+| حزمة التثبيت | حزمة واحدة في الجذر (بلا workspaces) + قفل واحد | `package.json` · `package-lock.json` |
 | إنشاء السجلات | إضافة طالب/معلم من الواجهة + REST (`POST /api/v1/students|teachers`) بحساب دخول فعلي | `lib/server/registry.ts` |
 | بحث شامل | ⌘K في كل بوابة + صفحة بحث في تطبيق الطالب | `app/api/v1/search` · `components/student/student-search.tsx` |
 | جاهزية الويب | Sitemap · robots · web manifest · Open Graph | `app/sitemap.ts` · `robots.ts` · `manifest.ts` |
@@ -61,7 +61,7 @@
 
 - **CSV** بتصدير UTF-8 مع BOM (`efbbbf`) وعناوين عربية — مُتحقَّق بالبايتات، وصلاحية التصدير مقيّدة بـ `report.export` (الطالب يحصل على **403**).
 - **سجل تدقيق** لكل عملية حساسة (دخول، تحقق، تعديل درجة، قرار واقعة، إعدادات، تفضيلات…) ويُعرَض في `/admin/audit` مع فلترة.
-- **مصدر البيانات**: مخزن خادمي واحد في العملية (`lib/server/store.ts`) يُبنى من `lib/server/seed.ts`، مُشكَّل كطبقة مستودع بحيث يُستبدَل استعلاماً باستعلام بـ PostgreSQL (`db/schema.sql`). عمره عمر العملية — الجلسات ورموز التحقق وحدها تُحفظ في `web/.data/auth-state.json` فتصمد أمام إعادة التشغيل (وهذا مُتحقَّق).
+- **مصدر البيانات**: مخزن خادمي واحد في العملية (`lib/server/store.ts`) يُبنى من `lib/server/seed.ts`، مُشكَّل كطبقة مستودع بحيث يُستبدَل استعلاماً باستعلام بـ PostgreSQL (`db/schema.sql`). عمره عمر العملية — الجلسات ورموز التحقق وحدها تُحفظ في `.data/auth-state.json` فتصمد أمام إعادة التشغيل (وهذا مُتحقَّق).
 - **الاستعلامات المالية/الحضور/الدرجات** كلها محسوبة من نفس المخزن، لا أرقام مكتوبة يدوياً في الواجهة.
 
 ---
@@ -78,8 +78,8 @@
 ## 6. كيف تتحقّق بنفسك
 
 ```bash
-# من جذر المستودع — لا حاجة للدخول إلى web/
-npm ci                  # يثبّت مساحة العمل web/ (npm workspaces) — مُتحقَّق من نسخة نظيفة
+# من جذر المستودع — حزمة واحدة
+npm ci                  # مُتحقَّق من نسخة نظيفة (clone من GitHub)
 npm run build
 ALLOW_DEV_SESSION=1 npm run start &
 

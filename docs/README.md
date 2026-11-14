@@ -1,7 +1,7 @@
 # AL MOHANDES — Delivery documentation
 
 This folder mirrors the in-app documentation (`/docs` on the running platform).
-Both are generated from `web/lib/docs.ts` so they cannot drift apart.
+Both are generated from `lib/docs.ts` so they cannot drift apart.
 
 | # | المستند | Document | File |
 | --- | --- | --- | --- |
@@ -23,12 +23,12 @@ Both are generated from `web/lib/docs.ts` so they cannot drift apart.
 | --- | --- |
 | PostgreSQL DDL (multi-tenant + exam engine) | [`db/schema.sql`](../db/schema.sql) |
 | OpenAPI 3.1 specification | [`openapi.yaml`](../openapi.yaml) |
-| Permission matrix (single source) | [`web/lib/permissions.ts`](../web/lib/permissions.ts) |
-| Exam engine (timer, grading, events) | [`web/lib/server/exam.ts`](../web/lib/server/exam.ts) |
+| Permission matrix (single source) | [`lib/permissions.ts`](../web/lib/permissions.ts) |
+| Exam engine (timer, grading, events) | [`lib/server/exam.ts`](../web/lib/server/exam.ts) |
 
 ## Regenerating
 
 ```bash
-npx tsc web/lib/docs.ts --outDir /tmp/am-docs --module commonjs --target es2020 --skipLibCheck
+npx tsc lib/docs.ts --outDir /tmp/am-docs --module commonjs --target es2020 --skipLibCheck
 node scripts/export-docs.mjs /tmp/am-docs/docs.js
 ```

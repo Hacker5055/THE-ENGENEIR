@@ -2,19 +2,34 @@
   "name": "al-mohandes",
   "version": "1.0.0",
   "private": true,
-  "description": "AL MOHANDES / المهندس — bilingual education management & secure examination platform",
-  "workspaces": [
-    "web"
-  ],
+  "description": "AL MOHANDES — Educational Management & Secure Examination Platform",
   "scripts": {
-    "dev": "npm --workspace web run dev",
-    "build": "npm --workspace web run build",
-    "start": "npm --workspace web run start",
-    "typecheck": "npm --workspace web run typecheck",
+    "dev": "next dev -p 3000 -H 0.0.0.0",
+    "build": "next build",
+    "start": "next start -p 3000 -H 0.0.0.0",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
     "smoke": "node scripts/smoke.mjs",
-    "docs:export": "npm --workspace web run docs:export"
+    "docs:export": "tsc lib/docs.ts --outDir /tmp/am-docs --module commonjs --target es2020 --skipLibCheck && node scripts/export-docs.mjs /tmp/am-docs/docs.js"
   },
   "engines": {
     "node": ">=20.9.0"
-  }
+  },
+  "dependencies": {
+    "@fontsource/ibm-plex-sans-arabic": "^5.3.0",
+    "@fontsource/inter": "^5.3.0",
+    "@tailwindcss/postcss": "^4.3.5",
+    "@types/node": "^22.10.2",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.10",
+    "next": "^16.4.6",
+    "qrcode": "^1.5.4",
+    "react": "^19.1.10",
+    "react-dom": "^19.1.10",
+    "server-only": "^0.0.1",
+    "tailwindcss": "^4.3.5",
+    "typescript": "^5.7.2"
+  },
+  "devDependencies": {}
 }
