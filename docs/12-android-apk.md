@@ -18,6 +18,17 @@ android/
 .github/workflows/android-apk.yml   ← بناء APK على GitHub Actions
 ```
 
+## حالة البناء (مُتحقَّق منها فعلاً)
+
+بُني الـ APK بنجاح على GitHub Actions من هذا الفرع — التشغيل
+[`43578815220`](https://github.com/Hacker5055/THE-ENGENEIR/actions/runs/43578815220)
+انتهى بـ **success** وأنتج الأثر `al-mohandes-debug-apk` (يحوي `app-debug.apk`).
+
+للتنزيل: افتح رابط التشغيل أعلاه ← قسم **Artifacts** ← `al-mohandes-debug-apk`.
+الأثر يبقى 30 يوماً، ثم أعد التشغيل من **Actions → Android APK → Run workflow**.
+
+> لم أستطع تنزيل الملف داخل بيئة العمل هذه لأن تخزين آثار GitHub محجوب عن الشبكة هنا؛ التنزيل من واجهة GitHub مباشرة يعمل.
+
 ## كيف تحصل على ملف APK فعلي
 
 المعاينة السحابية التي تعمل هنا **لا تحوي Android SDK**، لذا لا يمكن توليد ملف `.apk` داخلها. المسار العملي:
