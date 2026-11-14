@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AL MOHANDES</string>
+    <string name="app_name_latin">AL MOHANDES</string>
+
+    <string name="server_title">Server address</string>
+    <string name="server_message">Enter the address of the AL MOHANDES deployment this app should open (for example https://almohandes.edu). You can change it later from the error screen.</string>
+    <string name="server_hint">https://almohandes.edu</string>
+    <string name="server_save">Connect</string>
+
+    <string name="error_title">The platform is unreachable</string>
+    <string name="error_body">Check the internet connection, or change the server address if the platform is hosted on another domain.</string>
+    <string name="retry">Retry</string>
+    <string name="change_server">Change server address</string>
+
+    <string name="download_started">Downloading…</string>
+    <string name="no_app_for_link">No app can open this link</string>
+    <string name="cancel">Cancel</string>
+</resources>
