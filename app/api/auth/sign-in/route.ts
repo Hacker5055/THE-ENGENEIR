@@ -34,7 +34,13 @@ export async function POST(req: Request) {
 
   const result = await startSignIn(email, password);
   if (!result.ok) {
-    return NextResponse.redirect(new URL("/login?expired=0&error=credentials", origin), 303);
+    const code = result.error === "RATE_LIMITED" ? "rate" : "credentials";
+    return NextResponse.redirect(new URL(`/login?expired=0&error=${code}`, origin), 303);
+  }
+
+  if (result.kind === "SESSION") {
+    const carry = next.startsWith("/") && !next.startsWith("//") ? `?next=${encodeURIComponent(next)}` : "";
+    return NextResponse.redirect(new URL(`/welcome${carry}`, origin), 303);
   }
 
   (await cookies()).set("am_pending", result.challengeId, {

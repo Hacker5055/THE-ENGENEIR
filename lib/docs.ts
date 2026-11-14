@@ -105,7 +105,7 @@ SEC-01   RBAC مركزي يُفحص على الخادم في كل عملية، �
       { t: "h2", ar: "خريطة التطبيق", en: "Sitemap" },
       { t: "code", lang: "text", body: `عام
 ├─ /            الصفحة التعريفية
-├─ /login       دخول + حسابات تجريبية
+├─ /login       دخول + تحقق ثنائي + استعادة كلمة المرور
 ├─ /verify      رمز التحقق بخطوتين
 ├─ /docs        حزمة المستندات
 └─ /docs/[slug] مستند
@@ -343,7 +343,7 @@ SEC-01   RBAC مركزي يُفحص على الخادم في كل عملية، �
     descEn: "PostgreSQL tables, relations, constraints, and indexes.",
     updated: "2026-11-10",
     blocks: [
-      { t: "note", tone: "info", ar: "الملف الكامل القابل للتنفيذ: db/schema.sql في جذر المستودع. البيانات التجريبية هنا مبنية بنفس الأشكال، لذا استبدال المتجر باستعلامات SQL لا يغيّر الواجهات.", en: "Executable source: db/schema.sql at the repository root. The seeded store mirrors these shapes, so replacing it with SQL queries requires no UI change." },
+      { t: "note", tone: "success", ar: "التخزين الفعلي في هذه النسخة هو SQLite عبر node:sqlite (ملف واحد، WAL، كتابة متزامنة): كل تعديل يُحفظ داخل معاملة قبل إرسال الاستجابة. db/schema.sql يوثّق الشكل المرجعي نفسه لمن يريد الترحيل إلى PostgreSQL.", en: "The live deployment stores everything in SQLite through node:sqlite (single file, WAL, synchronous writes): every change is committed in a transaction before the response is sent. db/schema.sql documents the same reference shape for a future PostgreSQL migration." },
       { t: "h2", ar: "المجموعات الأساسية", en: "Core tables" },
       { t: "table", headers: [{ ar: "الجدول", en: "Table" }, { ar: "الوصف", en: "Description" }, { ar: "مفاتيح", en: "Keys" }], rows: [
         ["institutions", "المؤسسات على المنصة", "id · code uniq · status"],
@@ -462,7 +462,7 @@ db/                schema.sql + بيانات البذر` },
         ["تدوير بيانات مؤقتة", "Transient cleanup", "يومي", "حذف OTP منتهٍ وجلسات ميتة"],
         ["أرشفة الفصول", "Semester archive", "عند إغلاق الفصل", "قفل السجلات مع إبقائها للقراءة"],
       ] },
-      { t: "note", tone: "success", ar: "في هذه النسخة التجريبية كل المنطق يعمل فعلياً على الخادم داخل الذاكرة (globalThis) — لا واجهة تدّعي وظيفة غير موجودة. استبدال المتجر باستعلامات SQL لا يغيّر أي سلوك.", en: "In this prototype the entire logic genuinely runs server-side in memory (globalThis) — no screen claims a capability it does not have. Swapping the store for SQL changes no behaviour." },
+      { t: "note", tone: "success", ar: "كل المنطق يعمل على الخادم ويُحفظ في قاعدة SQLite دائمة: الجلسات، محاولات الدخول، إجابات الاختبارات وسجل التدقيق تنجو من إعادة التشغيل. وضع البيانات التجريبية (AM_DEMO_MODE=1) اختياري ومخصص للتدريب فقط.", en: "All logic runs server-side and persists to a durable SQLite database: sessions, login attempts, exam answers and the audit trail survive restarts. The demo dataset (AM_DEMO_MODE=1) is optional and intended for training only." },
     ],
   },
   {

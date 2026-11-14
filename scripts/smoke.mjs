@@ -15,13 +15,16 @@
  *
  * Exits non-zero if any assertion fails.
  */
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
+import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const BASE = (process.env.BASE_URL ?? "http://127.0.0.1:3000").replace(/\/$/, "");
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
-const STATE_FILE = process.env.AM_STATE_FILE ?? join(REPO, ".data", "auth-state.json");
+const DB_PATH = (() => {
+  const configured = process.env.AM_DB_PATH?.trim() || "./.data/almohandes.db";
+  return isAbsolute(configured) ? configured : resolve(REPO, configured);
+})();
 
 const results = [];
 let failed = 0;
@@ -67,13 +70,21 @@ async function req(path, { method = "GET", body, cookie, headers = {}, redirect 
   return res;
 }
 
+/**
+ * In demo mode the verification code is stored alongside the hashed challenge
+ * so it can be shown on screen. Reading it here keeps the smoke test honest:
+ * it still goes through the real sign-in + verify endpoints.
+ */
 function codeFor(challengeId) {
+  let db;
   try {
-    const state = JSON.parse(readFileSync(STATE_FILE, "utf8"));
-    const hit = (state.pending ?? []).find(([id]) => id === challengeId);
-    return hit?.[1]?.code ?? null;
+    db = new DatabaseSync(DB_PATH);
+    const row = db.prepare("SELECT demo_code FROM auth_challenges WHERE id = ?").get(challengeId);
+    return row?.demo_code ?? null;
   } catch {
     return null;
+  } finally {
+    db?.close();
   }
 }
 

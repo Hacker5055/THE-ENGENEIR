@@ -23,7 +23,20 @@ export async function loginAction(_prev: LoginState, formData: FormData): Promis
 
   const result = await startSignIn(email, password);
   if (!result.ok) {
-    return { error: "بيانات الدخول غير صحيحة. تحقق من البريد وكلمة المرور.", email };
+    return {
+      error:
+        result.error === "RATE_LIMITED"
+          ? "محاولات دخول كثيرة من هذا الجهاز. حاول بعد بضع دقائق أو استخدم «نسيت كلمة المرور»."
+          : "بيانات الدخول غير صحيحة. تحقق من البريد وكلمة المرور.",
+      email,
+    };
+  }
+
+  // No second factor required (no mail server configured): the session cookie
+  // is already set by startSignIn.
+  if (result.kind === "SESSION") {
+    const carry = next.startsWith("/") && !next.startsWith("//") ? `?next=${encodeURIComponent(next)}` : "";
+    redirect(`/welcome${carry}`);
   }
 
   const jar = await cookies();

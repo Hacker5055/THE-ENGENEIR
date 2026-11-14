@@ -1,19 +1,148 @@
 /* ============================================================================
-   Server data store
+   Server data store — durable SQLite-backed repository
    ----------------------------------------------------------------------------
-   The prototype runs against an in-process store. It is deliberately shaped
-   like a repository layer so that each accessor can be swapped for a
-   PostgreSQL query (see /db/schema.sql + /docs/07-backend-architecture.md).
-   Persistence is process-lifetime only — the UI never pretends otherwise.
+   The domain code talks to this module exactly as before (`db().students`,
+   `db().courses.push(...)`), but every collection is a change-tracked proxy:
+   as soon as something mutates, the touched collection is written to SQLite in
+   one transaction on the next microtask — before the response leaves the
+   process. Restarting the server no longer loses data.
+
+   First run decides the content of the database:
+     • AM_DEMO_MODE unset  → production bootstrap (empty + admin from env)
+     • AM_DEMO_MODE=1      → deterministic demo dataset (development/training)
    ========================================================================== */
 
+import "server-only";
 import { buildSeed, type Database } from "./seed";
+import { buildProductionDatabase } from "./bootstrap";
+import { sqlite } from "./persistence/database";
+import {
+  ARRAY_COLLECTIONS,
+  KV_KEYS,
+  loadState,
+  saveCollections,
+  type TrackedKey,
+} from "./persistence/documents";
+import { trackCollection } from "./persistence/tracked";
 
-const globalStore = globalThis as unknown as { __AM_DB?: Database };
+/** Demo data is a development/training convenience — never the default. */
+export function demoMode(): boolean {
+  const flag = process.env.AM_DEMO_MODE?.trim().toLowerCase();
+  if (flag === "1" || flag === "true" || flag === "yes") return true;
+  if (flag === "0" || flag === "false" || flag === "no") return false;
+  return process.env.NODE_ENV !== "production";
+}
+
+interface Runtime {
+  __AM_RAW?: Database;
+  __AM_VIEW?: Database;
+  __AM_DIRTY?: Set<TrackedKey>;
+  __AM_FLUSH_SCHEDULED?: boolean;
+}
+
+const runtime = globalThis as unknown as Runtime;
+
+function flush() {
+  runtime.__AM_FLUSH_SCHEDULED = false;
+  const dirty = runtime.__AM_DIRTY;
+  const raw = runtime.__AM_RAW;
+  if (!dirty || !raw || dirty.size === 0) return;
+  const keys = [...dirty];
+  dirty.clear();
+  try {
+    saveCollections(sqlite(), keys, (key) => (raw as unknown as Record<string, unknown>)[key]);
+  } catch (error) {
+    // A failed write must be loud: the request has already been computed, but
+    // silently dropping it would fake durability we do not have.
+    console.error("[store] failed to persist", keys.join(","), error);
+    for (const key of keys) dirty.add(key);
+    throw error;
+  }
+}
+
+function scheduleFlush() {
+  if (runtime.__AM_FLUSH_SCHEDULED) return;
+  runtime.__AM_FLUSH_SCHEDULED = true;
+  queueMicrotask(() => {
+    try {
+      flush();
+    } catch {
+      /* the error is already logged; the microtask must not become unhandled */
+    }
+  });
+}
+
+/** Writes any pending change immediately (used by tests, backup and shutdown). */
+export function flushNow() {
+  if (runtime.__AM_FLUSH_SCHEDULED) runtime.__AM_FLUSH_SCHEDULED = false;
+  flush();
+}
+
+function initialise(): Database {
+  const state = loadState(sqlite());
+  // `next build` prerenders some routes, and a build machine has no admin
+  // credentials. The build phase therefore always runs on an in-memory demo
+  // dataset: nothing is written anywhere and the production database is never
+  // created or required at build time.
+  const building = process.env.NEXT_PHASE === "phase-production-build";
+  const seed = state.empty ? (building || demoMode() ? buildSeed() : buildProductionDatabase()) : null;
+
+  const raw = (seed ?? {
+    bootAt: Date.now(),
+    ...Object.fromEntries(ARRAY_COLLECTIONS.map((name) => [name, state.collections[name] ?? []])),
+    settings: state.kv.settings,
+    studentPrefs: state.kv.studentPrefs ?? {},
+  }) as unknown as Database;
+
+  // Hydrated stores must still carry the original boot time.
+  if (!seed) raw.bootAt = Number(state.kv.bootAt ?? raw.bootAt);
+
+  const dirty = new Set<TrackedKey>();
+  runtime.__AM_DIRTY = dirty;
+
+  const view = { ...raw } as unknown as Record<string, unknown>;
+  for (const name of ARRAY_COLLECTIONS) {
+    const tracked = trackCollection(raw[name] as unknown as object, () => {
+      dirty.add(name);
+      scheduleFlush();
+    });
+    view[name] = tracked.value;
+  }
+  for (const name of KV_KEYS) {
+    const tracked = trackCollection(raw[name] as unknown as object, () => {
+      dirty.add(name);
+      scheduleFlush();
+    });
+    view[name] = tracked.value;
+  }
+
+  runtime.__AM_RAW = raw;
+  runtime.__AM_VIEW = view as unknown as Database;
+
+  if (seed) {
+    // Persist the freshly created database before serving the first request.
+    dirty.add("bootAt" as TrackedKey);
+    for (const name of ARRAY_COLLECTIONS) dirty.add(name);
+    for (const name of KV_KEYS) dirty.add(name);
+    try {
+      saveCollections(sqlite(), [...dirty], (key) => (raw as unknown as Record<string, unknown>)[key]);
+      dirty.clear();
+    } catch (error) {
+      console.error("[store] bootstrap write failed", error);
+      throw error;
+    }
+    sqlite()
+      .prepare(
+        "INSERT INTO kv (key, value, updated_at) VALUES ('bootAt', ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+      )
+      .run(String(raw.bootAt), Date.now());
+  }
+
+  return runtime.__AM_VIEW;
+}
 
 export function db(): Database {
-  if (!globalStore.__AM_DB) globalStore.__AM_DB = buildSeed();
-  return globalStore.__AM_DB;
+  return runtime.__AM_VIEW ?? initialise();
 }
 
 /* ------------------------------ lookups ------------------------------ */

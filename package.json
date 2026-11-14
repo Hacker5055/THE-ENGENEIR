@@ -11,7 +11,8 @@
     "lint": "tsc --noEmit",
     "smoke": "node scripts/smoke.mjs",
     "doctor": "node scripts/doctor.mjs",
-    "docs:export": "tsc lib/docs.ts --outDir /tmp/am-docs --module commonjs --target es2020 --skipLibCheck && node scripts/export-docs.mjs /tmp/am-docs/docs.js"
+    "docs:export": "tsc lib/docs.ts --outDir /tmp/am-docs --module commonjs --target es2020 --skipLibCheck && node scripts/export-docs.mjs /tmp/am-docs/docs.js",
+    "backup": "node scripts/backup-db.mjs"
   },
   "engines": {
     "node": ">=20.9.0"
@@ -25,6 +26,7 @@
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.10",
     "next": "^16.4.6",
+    "nodemailer": "^10.5.0",
     "qrcode": "^1.5.4",
     "react": "^19.1.10",
     "react-dom": "^19.1.10",
@@ -32,5 +34,7 @@
     "tailwindcss": "^4.3.5",
     "typescript": "^5.7.2"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@types/nodemailer": "^8.0.2"
+  }
 }

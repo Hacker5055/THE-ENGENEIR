@@ -1,6 +1,8 @@
 import "server-only";
 import { db, notify, pushAudit } from "./store";
-import { ROLE_PASSWORD, hashPassword } from "./credentials";
+import { ROLE_PASSWORD, generateTemporaryPassword, hashPassword } from "./credentials";
+import { demoMode } from "./store";
+import { mailConfigured, sendWelcomeCredentials } from "./mail";
 import type { SessionUser, Student, Teacher } from "@/lib/types";
 
 /**
@@ -62,7 +64,12 @@ export function createStudentRecord(actor: SessionUser, input: CreateStudentInpu
   }
 
   const studentNumber = nextStudentNumber();
-  const email = `${studentNumber.toLowerCase()}@almohandes.edu`;
+  const domain = db().institutions[0]?.domain || "almohandes.edu";
+  const email = `${studentNumber.toLowerCase()}@${domain}`;
+  // Never a shared default: production accounts get a one-off password that
+  // must be changed at first sign-in. Demo mode keeps the documented password
+  // so the public demo stays usable.
+  const tempPassword = demoMode() ? ROLE_PASSWORD.STUDENT : generateTemporaryPassword();
   if (db().users.some((u) => u.email.toLowerCase() === email)) {
     return { ok: false, error: "تعذّر توليد بريد فريد — أعد المحاولة." };
   }
@@ -111,7 +118,8 @@ export function createStudentRecord(actor: SessionUser, input: CreateStudentInpu
     studentId: id,
     avatarHue: hueFor(nameAr),
     title: `طالب — المستوى ${level}`,
-    passwordHash: hashPassword(ROLE_PASSWORD.STUDENT),
+    passwordHash: hashPassword(tempPassword),
+    mustChangePassword: !demoMode(),
   });
 
   notify({
@@ -136,7 +144,8 @@ export function createStudentRecord(actor: SessionUser, input: CreateStudentInpu
     severity: "WARNING",
   });
 
-  return { ok: true, number: studentNumber, email, password: ROLE_PASSWORD.STUDENT, id };
+  deliverCredentials(email, nameAr, tempPassword);
+  return { ok: true, number: studentNumber, email, password: tempPassword, id };
 }
 
 export function createTeacherRecord(actor: SessionUser, input: CreateTeacherInput): RegistryResult {
@@ -145,6 +154,7 @@ export function createTeacherRecord(actor: SessionUser, input: CreateTeacherInpu
   const title = (input.title ?? "").trim() || "عضو هيئة تدريس";
   const departmentId = input.departmentId;
   const email = input.email.trim().toLowerCase();
+  const tempPassword = demoMode() ? ROLE_PASSWORD.TEACHER : generateTemporaryPassword();
   const courseIds = (input.courseIds ?? []).filter(Boolean);
 
   if (nameAr.length < 3) return { ok: false, error: "الاسم بالعربية مطلوب (3 أحرف على الأقل)." };
@@ -182,7 +192,8 @@ export function createTeacherRecord(actor: SessionUser, input: CreateTeacherInpu
     teacherId: id,
     avatarHue: hueFor(nameAr),
     title,
-    passwordHash: hashPassword(ROLE_PASSWORD.TEACHER),
+    passwordHash: hashPassword(tempPassword),
+    mustChangePassword: !demoMode(),
   });
 
   // Newly assigned courses point at the new owner immediately.
@@ -213,5 +224,22 @@ export function createTeacherRecord(actor: SessionUser, input: CreateTeacherInpu
     severity: "WARNING",
   });
 
-  return { ok: true, number: id, email, password: ROLE_PASSWORD.TEACHER, id };
+  deliverCredentials(email, nameAr, tempPassword);
+  return { ok: true, number: id, email, password: tempPassword, id };
+}
+
+/**
+ * Hands the temporary password to the account owner. Without SMTP the admin
+ * reads it from the UI once — it is never recoverable afterwards because only
+ * the scrypt hash is stored.
+ */
+function deliverCredentials(to: string, name: string, password: string) {
+  if (!mailConfigured() || demoMode()) return;
+  const base = (process.env.AM_BASE_URL ?? "").replace(/\/$/, "");
+  void sendWelcomeCredentials({
+    to,
+    name,
+    password,
+    loginUrl: base ? `${base}/login` : "/login",
+  });
 }
